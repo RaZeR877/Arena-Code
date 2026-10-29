@@ -273,7 +273,7 @@ async function handleApi(req, res, url) {
     const data = await readBody(req, 16 * 1024);
     const id = crypto.randomUUID(); const dir = projectDir(id); fs.mkdirSync(dir, { recursive: false });
     const name = safeName(data.name); fs.writeFileSync(path.join(dir, '.arena-project.json'), JSON.stringify({ name, createdAt: new Date().toISOString() }, null, 2));
-    fs.writeFileSync(path.join(dir, 'README.md'), `# ${name}\n\nCreated with Arena Code.\n`);
+    fs.writeFileSync(path.join(dir, 'README.md'), `# ${name}\n\nCreated with Vynqode.\n`);
     json(res, 201, { project: projectInfo(dir) }); return true;
   }
   if (url.pathname === '/api/projects/import-zip' && req.method === 'POST') {
@@ -575,7 +575,7 @@ async function handleApi(req, res, url) {
     const model = typeof data.model === 'string' && MODELS.includes(data.model) ? data.model : MODELS[0];
     try {
       const response = await fetch(`${AI_BASE_URL}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages: [{ role: 'system', content: 'You are Arena Code, a practical coding assistant. Be accurate and clearly state uncertainty. For a web artifact, give complete code in a fenced code block. Never claim code was tested unless it actually was.' }, ...messages], max_tokens: 5000 }), signal: AbortSignal.timeout(CHAT_TIMEOUT_MS) });
+        body: JSON.stringify({ model, messages: [{ role: 'system', content: 'You are Vynqode AI, a practical coding assistant. Be accurate and clearly state uncertainty. For a web artifact, give complete code in a fenced code block. Never claim code was tested unless it actually was.' }, ...messages], max_tokens: 5000 }), signal: AbortSignal.timeout(CHAT_TIMEOUT_MS) });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) { const upstream = response.status >= 500 ? 502 : 400; fail(res, upstream, `AI provider request failed (${response.status}). ${String(payload.error?.message || 'Check provider configuration.').slice(0, 500)}`, 'PROVIDER_ERROR'); return true; }
       const text = payload.choices?.[0]?.message?.content;
@@ -876,7 +876,7 @@ function runProcess(command, args, cwd, timeoutMs, useShell = false) {
   });
 }
 if (!['127.0.0.1', '::1', 'localhost'].includes(HOST) && process.env.ARENA_ALLOW_REMOTE !== '1') {
-  console.error('Refusing to bind Arena Code to a remote interface by default. Use HOST=127.0.0.1 or explicitly set ARENA_ALLOW_REMOTE=1 after reviewing the security risks.');
+  console.error('Refusing to bind Vynqode to a remote interface by default. Use HOST=127.0.0.1 or explicitly set ARENA_ALLOW_REMOTE=1 after reviewing the security risks.');
   process.exit(1);
 }
 const server = http.createServer(async (req, res) => {
@@ -923,8 +923,8 @@ server.on('upgrade', (req, socket, head) => {
 });
 function startServer() {
   server.listen(PORT, HOST, () => {
-    console.log(`Arena Code ${HOSTED_MODE ? '(hosted mode)' : '(local mode)'} ready at http://${HOST}:${PORT}`);
-    if (HOST !== '127.0.0.1' && HOST !== '::1' && HOST !== 'localhost' && !HOSTED_MODE) console.warn('WARNING: Arena Code is bound to a non-local interface. Local mode is not intended for public exposure.');
+    console.log(`Vynqode ${HOSTED_MODE ? '(hosted mode)' : '(local mode)'} ready at http://${HOST}:${PORT}`);
+    if (HOST !== '127.0.0.1' && HOST !== '::1' && HOST !== 'localhost' && !HOSTED_MODE) console.warn('WARNING: Vynqode is bound to a non-local interface. Local mode is not intended for public exposure.');
     if (API_KEY) console.log(`AI provider configured (${AI_BASE_URL}); the API key is only read from the server environment.`);
   });
 }

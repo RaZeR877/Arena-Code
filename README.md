@@ -1,4 +1,58 @@
-# Arena Code 0.11.0
+# Vynqode 0.12.0 — focused coding IDE
+
+![Vynqode IDE](docs/vynqode-preview.png)
+
+**One project, one editor, one optional AI coding assistant.** Vynqode is a renamed, streamlined continuation of the earlier Arena Code project. The redesigned interface replaces Battle, leaderboard, voting, demo chat, and model comparison with a three-pane development workspace: file explorer, editor/preview, and an approval-based AI assistant.
+
+## Use it now
+
+**Browser-only version:** https://razer877.github.io/Arena-Code/ (the GitHub repository slug has not been renamed yet). It supports browser-local projects, file editing, basic syntax checks, sandboxed HTML/CSS/classic-JavaScript preview, ZIP import/export, one-step undo, and optional WebLLM inference with approved AI multi-file edits. No usage charge or API key is required; local model availability depends on WebGPU and the user's GPU/memory. Project files persist only in the browser and are not synchronized to a cloud account. Export a ZIP for backups.
+
+**Node-backed version:** install Node.js 20+, run `npm install`, then `npm start`, and open http://127.0.0.1:3000. The focused IDE is now the default homepage in both modes. The server retains its legacy backend APIs, runner, and hosted-mode implementation for future integration; the browser IDE does not claim that GitHub Pages can execute programs or run Docker.
+
+### Interface
+
+- **Left:** create/rename/delete/open project source files.
+- **Center:** source editor with line numbers, syntax checks, HTML preview, and save/undo.
+- **Right:** one AI coding assistant, with `Ask` and `Suggest edits` actions and mandatory change approval.
+- **Top:** project name, new project, import, ZIP export, GitHub source link.
+- **Mobile:** Files / Editor / AI tabs instead of shrinking three columns.
+
+### Keyboard shortcuts
+
+`Ctrl/Cmd+S` saves; `Ctrl/Cmd+Enter` opens preview; `Tab` inserts two spaces in the editor.
+
+### Test and build
+
+```bash
+npm run check:pages
+npm run build:pages
+python3 test/pages-browser.py  # optional; requires Playwright and Chromium
+npm run ci
+```
+
+GitHub Pages is built exclusively from `public/index.html`, `public/ide.css`, `public/ide.js`, shared browser project/AI modules, and the model catalog. Legacy comparison scripts are **not loaded or published**.
+
+### Naming/legal note
+
+The working name **Vynqode** was chosen after a preliminary web search revealed no obvious exact-name coding IDE conflict. This is not a formal trademark search or legal opinion. Before commercial launch, search the relevant national trademark registries (especially India), WIPO Global Brand Database, domain names, and app stores. Avoid other software products' trademarks, logos, and trade dress.
+
+### Security and limitations
+
+- This web editor is for small, text-focused projects (100 files, 3 MiB total, 400 KiB per file). Unsafe paths and obvious private-key filenames are rejected.
+- AI suggestions are checked for syntax when supported, show before/after code, and require explicit approval. Model output can still be incorrect or insecure; no runtime tests are performed in the browser edition.
+- HTML preview runs in an opaque-origin sandbox, but scripts can still make outbound requests. Do not paste secrets into previews or untrusted code.
+- Local browser data can be lost when storage is cleared. The one-step undo is not a version-control system.
+- Back-end Docker tools, hosted accounts, builds, terminals, and deployments require a separate server and are not available on GitHub Pages.
+- Existing browser projects stored under the old key are migrated on first load; the legacy storage key remains intact for fallback.
+
+## Earlier backend implementation notes
+
+The following historical documentation describes components still in the repository but **not exposed in the focused browser UI**. It should not be mistaken for a fully hosted production IDE.
+
+---
+
+# Previous implementation: Arena Code 0.11.0
 
 Arena Code is an independent, local-first AI coding workspace with an optional self-hosted multi-user mode. It has a multi-file project explorer, Monaco editor, built-in JavaScript/TypeScript intelligence, optional Language Server Protocol (LSP) connections, approval-based coding-agent tools, local Node debugging, file history, Git support, and Docker-backed build/test workflows. It is not affiliated with Cursor, Replit, or Arena.ai.
 

@@ -3,65 +3,31 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
-
-test('GitHub Pages build is self-contained, subpath-safe, and excludes the private backend', () => {
-  const build = spawnSync(process.execPath, [path.join(root, 'scripts/build-pages.cjs')], { cwd: root, encoding: 'utf8' });
-  assert.equal(build.status, 0, build.stderr);
-  const dir = path.join(root, 'dist', 'pages');
-  const entries = fs.readdirSync(dir);
-  assert.deepEqual(entries.sort(), [
-    '.nojekyll', 'app.js', 'ai-workflow.js', 'browser-core.js', 'browser-workspace.js', 'index.html', 'model-catalog.js', 'pages-static.css', 'pages-static.js',
-    'robots.txt', 'studio.css', 'studio.js', 'style.css', 'templates.js'
-  ].sort());
-  const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
-  assert.match(html, /src="\.\/pages-static\.js"/);
-  assert.match(html, /src="\.\/studio\.js"/);
-  assert.match(html, /href="\.\/style\.css"/);
-  assert.doesNotMatch(html, /(?:src|href)="\//);
-  assert.match(html, /src="\.\/browser-workspace\.js"/);
-  assert.match(html, /src="\.\/ai-workflow\.js"/);
-  assert.match(html, /src="\.\/model-catalog\.js"/);
-  assert.doesNotMatch(html, /src="\.\/workspace\.js"|editor\.js/);
-  for (const file of ['app.js', 'studio.js', 'templates.js']) {
-    assert.ok(fs.statSync(path.join(dir, file)).size > 1000, `Missing ${file}`);
-  }
-  assert.ok(!entries.some(p => /\.env|server|runner|hosted|package\.json|key/i.test(p)));
+test('Vynqode Pages build is self-contained, safe for project subpaths, and excludes the backend', () => {
+  const proc=spawnSync(process.execPath,[path.join(root,'scripts/build-pages.cjs')],{cwd:root,encoding:'utf8'});
+  assert.equal(proc.status,0,proc.stderr);
+  const dir=path.join(root,'dist/pages');
+  const files=fs.readdirSync(dir).sort();
+  assert.deepEqual(files,['.nojekyll','ai-workflow.js','browser-core.js','favicon.svg','ide.css','ide.js','index.html','model-catalog.js','robots.txt'].sort());
+  const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
+  assert.match(html,/Vynqode/);
+  assert.match(html,/src="\.\/ide\.js"/);
+  assert.match(html,/src="\.\/browser-core\.js"/);
+  assert.match(html,/id="codeEditor"/);
+  assert.match(html,/id="assistantPanel"/);
+  assert.doesNotMatch(html,/(?:src|href)="\//);
+  assert.doesNotMatch(html,/Battle|Leaderboard|Vote|Compare models/i);
+  assert.doesNotMatch(html,/src="\.\/app\.js"|src="\.\/studio\.js"/);
+  assert.ok(fs.statSync(path.join(dir,'ide.js')).size>10000);
+  assert.ok(!files.some(p=>/\.env|server|runner|hosted|package\.json|key/i.test(p)));
 });
-
-test('Pages mode routes demo chat/status locally and fails closed for server-only APIs', async () => {
-  const script = fs.readFileSync(path.join(root, 'pages', 'pages-static.js'), 'utf8');
-  let nativeCalls = 0;
-  const memory = new Map();
-  const storage = {
-    getItem: k => memory.has(k) ? memory.get(k) : null,
-    setItem: (k, v) => memory.set(k, String(v))
-  };
-  const context = {
-    window: { fetch: async () => { nativeCalls++; return new Response('ok'); } },
-    localStorage: storage,
-    location: { href: 'https://razer877.github.io/Arena-Code/' },
-    Response,
-    Request,
-    URL,
-    document: { addEventListener() {} }
-  };
-  vm.runInNewContext(script, context);
-  assert.equal(storage.getItem('ac-source'), 'demo');
-  const status = await context.window.fetch('/api/status');
-  const parsed = await status.json();
-  assert.equal(parsed.demo, true);
-  assert.equal(parsed.staticPages, true);
-  assert.equal(parsed.features.serverProjects, false);
-  assert.equal(parsed.features.browserProjects, true);
-  const chat = await context.window.fetch('/api/chat', { method: 'POST' });
-  assert.equal((await chat.json()).demo, true);
-  const denied = await context.window.fetch('/api/projects');
-  assert.equal(denied.status, 503);
-  assert.match((await denied.json()).error, /Node\.js backend/);
-  assert.equal(nativeCalls, 0);
-  await context.window.fetch('./style.css');
-  assert.equal(nativeCalls, 1);
+test('Vynqode frontend contains only one working coding surface and no API keys',()=>{
+  const source=fs.readFileSync(path.join(root,'public/ide.js'),'utf8');
+  assert.match(source,/workflow\.propose/);
+  assert.match(source,/core\.update/);
+  assert.match(source,/core\.zip/);
+  assert.match(source,/reviewDialog/);
+  assert.doesNotMatch(source,/sk-(?:proj-)?[A-Za-z0-9]{20,}/);
 });

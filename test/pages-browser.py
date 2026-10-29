@@ -1,124 +1,79 @@
-"""Chromium UI smoke test of the real GitHub Pages artifact, with no network or backend.
-Run: python3 test/pages-browser.py; needs Playwright and a local Chromium installation.
-"""
-from playwright.sync_api import sync_playwright
+"""Vynqode focused IDE end-to-end browser smoke. Uses a mock AI model; no real inference claims."""
 from pathlib import Path
-import re, os, threading, functools
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from playwright.sync_api import Error as PlaywrightError
-ROOT = Path(__file__).resolve().parents[1] / 'dist/pages'
-html = (ROOT / 'index.html').read_text(encoding='utf-8')
-html = re.sub(r'<link rel="stylesheet" href="\./[^"]+">', '', html)
-html = re.sub(r'<script src="\./[^"]+"></script>', '', html)
-# Serving from localhost avoids Chromium's about:blank + opaque iframe navigation bug
-# on GitHub Actions. Restricted local environments can use the inline fallback.
-class SilentHandler(SimpleHTTPRequestHandler):
-    def log_message(self, *args): pass
-handler = functools.partial(SilentHandler, directory=str(ROOT))
-server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
-threading.Thread(target=server.serve_forever, daemon=True).start()
+from playwright.sync_api import sync_playwright, Error as BrowserError
+import functools, os, threading
+ROOT=Path(__file__).resolve().parents[1]/'dist'/'pages'
+class Quiet(SimpleHTTPRequestHandler):
+    def log_message(self,*args): pass
+server=ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=str(ROOT)))
+threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
- with sync_playwright() as p:
-    installed_chromium = os.getenv('ARENA_CHROMIUM', '/usr/bin/chromium')
-    binary = installed_chromium if Path(installed_chromium).is_file() else None
-    browser = p.chromium.launch(headless=True, executable_path=binary, args=['--no-sandbox','--disable-dev-shm-usage'])
-    page = browser.new_page(viewport={'width': 1330, 'height': 900}, accept_downloads=True)
-    errors = []
-    page.on('pageerror', lambda error: errors.append(str(error)))
-    page.on('dialog', lambda dialog: dialog.accept())
+  with sync_playwright() as p:
+    binary=os.getenv('ARENA_CHROMIUM','/usr/bin/chromium')
+    browser=p.chromium.launch(headless=True,executable_path=binary if Path(binary).is_file() else None,args=['--no-sandbox','--disable-dev-shm-usage'])
+    context=browser.new_context(viewport={'width':1366,'height':850},accept_downloads=True)
+    page=context.new_page();errors=[]
+    page.on('pageerror',lambda e: errors.append(str(e)))
+    page.on('dialog',lambda d:d.accept())
+    used_fallback=False
     try:
-        page.goto(f'http://127.0.0.1:{server.server_port}/', wait_until='domcontentloaded', timeout=8000)
-        page.locator('#pagesWorkspaceBtn').wait_for(timeout=5000)
-        print('Using real localhost HTTP origin for Chromium smoke test')
-    except PlaywrightError:
-        print('Localhost navigation blocked; using inline DOM fallback')
-        page.close()
-        page = browser.new_page(viewport={'width': 1330, 'height': 900}, accept_downloads=True)
-        page.on('pageerror', lambda error: errors.append(str(error)))
-        page.on('dialog', lambda dialog: dialog.accept())
-        page.set_content(html, wait_until='domcontentloaded')
-        # about:blank cannot write persistent storage in locked-down environments.
-        page.evaluate("""() => {const data = new Map(); Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k),clear:()=>data.clear()}})}""")
-        for src in ['pages-static.js','app.js','templates.js','model-catalog.js','studio.js','browser-core.js','ai-workflow.js','browser-workspace.js']:
-            page.add_script_tag(content=(ROOT/src).read_text(encoding='utf-8'))
-        for style in ['style.css','studio.css','pages-static.css']:
-            page.add_style_tag(content=(ROOT/style).read_text(encoding='utf-8'))
-        page.evaluate("window.crypto.randomUUID ||= () => 'smoke-' + Math.random().toString(36).slice(2)")
-        page.evaluate("document.dispatchEvent(new Event('DOMContentLoaded'))")
-    page.locator('#pagesWorkspaceBtn').wait_for(timeout=5000)
-    page.locator('#pagesWorkspaceBtn').click()
-    assert page.locator('#arenaLocalDialog').evaluate('(e)=>e.open') is True
-    assert page.locator('.arena-local-file').count() == 3
-    assert page.locator('#arenaLocalCode').input_value().startswith('<!doctype html>')
-    page.locator('[data-action="check"]').click()
-    assert 'Basic syntax checks completed' in page.locator('#arenaLocalStatus').inner_text()
-    page.locator('.arena-local-file[data-path="app.js"]').click()
-    page.locator('#arenaLocalCode').fill('const broken = ;')
-    page.locator('[data-action="save"]').click()
-    page.locator('[data-action="check"]').click()
-    assert 'syntax check(s) failed' in page.locator('#arenaLocalStatus').inner_text()
-    page.locator('[data-action="restore"]').click()
-    assert page.locator('#arenaLocalCode').input_value().startswith('document.querySelector')
-    page.locator('[data-action="check"]').click()
-    assert 'Basic syntax checks completed' in page.locator('#arenaLocalStatus').inner_text()
-    page.locator('[data-action="preview"]').click()
-    page.frame_locator('#arenaLocalFrame').locator('h1').wait_for(timeout=5000)
-    assert page.frame_locator('#arenaLocalFrame').locator('h1').inner_text().startswith('Hello')
-    page.frame_locator('#arenaLocalFrame').locator('#hello').click()
-    page.frame_locator('#arenaLocalFrame').locator('h1').filter(has_text='It works!').wait_for(timeout=5000)
-    # A deterministic *mock* WebLLM response exercises approval, multi-file edits, and undo.
-    # This validates UI wiring, not a real coding model's quality.
-    page.evaluate("""() => {
-      studio.ready=true;studio.model='Mock-Local-Coder-1.5B';window._arenaModelCalls=0;
-      studio.engine={chat:{completions:{create:async ({messages})=>{
-        window._arenaModelCalls++;
-        if(window._arenaModelCalls===1) return {choices:[{message:{content:JSON.stringify({summary:'invalid JS',changes:[{path:'extra.js',content:'const = ;'}]})}}]};
-        return {choices:[{message:{content:JSON.stringify({summary:'Add a second heading',changes:[{path:'index.html',content:'<!doctype html><html><body><h1>Mock AI approved change</h1><script src=\"app.js\"></script></body></html>'},{path:'extra.js',content:'const verified = true;'}]})}}]};
-      }}}};
-    }""")
-    page.locator('#arenaLocalTask').fill('Add a second heading')
-    page.locator('[data-action="agent"]').click()
-    page.get_by_text('Review every proposed AI file change').wait_for(timeout=5000)
-    assert page.locator('.arena-review-files details').count() == 2
-    assert page.locator('.arena-local-file[data-path="extra.js"]').count() == 0
-    assert page.evaluate('window._arenaModelCalls') == 2, 'syntax failure should trigger one model retry'
-    page.get_by_role('button', name='Approve 2 changes').click()
-    page.locator('.arena-local-file[data-path="extra.js"]').wait_for(timeout=5000)
-    page.locator('[data-action="restore"]').click()
-    assert page.locator('.arena-local-file[data-path="extra.js"]').count() == 0
-    assert 'Hello from Arena' in page.evaluate('JSON.parse(localStorage.getItem("arena-pages-workspace-v1")).files["index.html"]')
-    with page.expect_download(timeout=5000) as item:
-        page.locator('[data-action="export"]').click()
-    assert item.value.suggested_filename.endswith('.zip')
-    page.evaluate("""() => {
-      studio.engine={chat:{completions:{create:async ({messages})=>{
-        const task=messages.at(-1).content;
-        const changes=task.includes('status-good')
-          ? [{path:'index.html',content:'<html><body><div class=\"status-good\">ok</div></body></html>'},{path:'style.css',content:'.status-good{color:green;}'}]
-          : [{path:'index.html',content:'<html><body><div id=\"arenaBadge\">ok</div></body></html>'},{path:'app.js',content:'document.querySelector(\"#arenaBadge\")'}];
-        return {choices:[{message:{content:JSON.stringify({summary:'evaluation only',changes})}}]};
-      }}}};
-    }""")
-    with page.expect_download(timeout=10000) as evaluation_download:
-        page.locator('[data-action="benchmark"]').click()
-    assert evaluation_download.value.suggested_filename.endswith('.json')
-    assert '2/2 structural tasks passed' in page.locator('#arenaLocalStatus').inner_text()
-    assert 'No functional execution' in page.locator('#arenaLocalConsole').inner_text()
-    page.locator('[data-action="close"]').click()
-    page.locator('#templatesBtn').click()
-    page.locator('.template-card').first.click()
-    assert page.locator('#codeEditor').count() == 1
-    page.locator('#modal').evaluate('(e)=>e.close()')
-    page.evaluate("""() => {
-      studio.modelChoices=ArenaModelCatalog.availableModels([
-        {model_id:'Qwen2.5-0.5B-Instruct-q4f16_1-MLC'},
-        {model_id:'Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC'}]);
-    }""")
-    page.locator('#aiBtn').click()
-    assert page.locator('#localModel option').count() == 2
-    assert 'High GPU memory' in page.locator('#localModel option').last.inner_text()
-    assert not errors, errors
-    print('Browser workflow passed: local project edit → syntax failure → undo → preview → ZIP export → Starter Lab')
+      page.goto(f'http://127.0.0.1:{server.server_port}/',wait_until='domcontentloaded',timeout=8000)
+      page.locator('#fileList .file-row').first.wait_for(timeout=5000)
+      print('Vynqode browser smoke using HTTP origin')
+    except BrowserError:
+      used_fallback=True
+      page.close();page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.on('dialog',lambda d:d.accept())
+      page.set_content((ROOT/'index.html').read_text(),wait_until='domcontentloaded')
+      page.evaluate("""() => { const m=new Map();Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k)}}) }""")
+      for asset in ['browser-core.js','model-catalog.js','ai-workflow.js','ide.js']:
+        page.add_script_tag(content=(ROOT/asset).read_text())
+      page.add_style_tag(content=(ROOT/'ide.css').read_text())
+      print('Vynqode browser smoke using inline fallback')
+    assert page.title()=='Vynqode — AI Coding IDE'
+    assert page.locator('#fileList .file-row').count()==3
+    assert page.locator('#assistantPanel').is_visible()
+    assert page.locator('text=Battle').count()==0
+    page.locator('[data-file="app.js"]').click()
+    page.locator('#codeEditor').fill('const broken = ;')
+    page.locator('#saveFile').click()
+    page.locator('#checkSyntax').click()
+    assert 'syntax issues found' in page.locator('#statusMessage').inner_text()
+    page.locator('#undoChange').click()
+    assert 'document.querySelector' in page.locator('#codeEditor').input_value()
+    page.locator('#runPreview').click()
+    preview=page.frame_locator('#previewFrame')
+    preview.locator('#action').wait_for(timeout=5000)
+    preview.locator('#action').click(timeout=5000)
+    preview.get_by_text('You are building something great!').wait_for(timeout=5000)
+    page.locator('#editorTab').click()
+    page.evaluate("""() => { window.Vynqode.attachTestEngine({chat:{completions:{create:async ({messages})=>{
+       window.vynqodeMockCalls=(window.vynqodeMockCalls||0)+1;
+       if(window.vynqodeMockCalls===1)return {choices:[{message:{content:JSON.stringify({summary:'invalid JS',changes:[{path:'new.js',content:'const = ;'}]})}}]};
+       return {choices:[{message:{content:JSON.stringify({summary:'new button handler',changes:[{path:'new.js',content:'const a = 42;'}]})}}]};
+    }}}},'Mock Model'); }""")
+    page.locator('#assistantPrompt').fill('Create a new.js file containing a constant')
+    page.locator('#proposeEdits').click()
+    page.locator('#reviewDialog[open]').wait_for(timeout=10000)
+    assert page.evaluate('window.vynqodeMockCalls')==2
+    assert page.locator('#fileList [data-file="new.js"]').count()==0
+    page.locator('#approveChanges').click()
+    page.locator('#fileList [data-file="new.js"]').wait_for(timeout=5000)
+    page.locator('#undoChange').click()
+    assert page.locator('#fileList [data-file="new.js"]').count()==0
+    with page.expect_download(timeout=8000) as d:
+       page.locator('#exportProject').click()
+    assert d.value.suggested_filename.endswith('.zip')
+    page.set_viewport_size({'width':390,'height':810})
+    page.locator('[data-section="assistant"]').click()
+    assert page.locator('#assistantPanel').is_visible()
+    page.locator('[data-section="editor"]').click()
+    assert page.locator('#editorPanel').is_visible()
+    if not used_fallback:
+      page.reload();page.locator('#fileList .file-row').first.wait_for(timeout=5000)
+    page.screenshot(path=str(Path('/mnt/data/vynqode-ide-preview.png')),full_page=False)
+    assert not errors,errors
+    print('Vynqode: editing, syntax checks, undo, preview, reviewed AI edits, ZIP and responsive layout PASS')
     browser.close()
 finally:
-    server.shutdown()
+  server.shutdown()

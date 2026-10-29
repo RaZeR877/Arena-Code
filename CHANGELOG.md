@@ -1,3 +1,12 @@
+## Vynqode 0.12.0 (2026-10-29)
+
+- Rebranded user-facing application as Vynqode; preliminary exact-name screening only, not legal clearance.
+- Replaced Battle/Side-by-Side/Direct competition interface with a single IDE (explorer, editor/preview, AI assistant).
+- Unified the browser-only and Node-served landing interfaces; kept old APIs for compatibility.
+- Added a responsive small-screen tab layout, editor shortcuts, reviewed AI edits, ZIP import/export, syntax checks, and one-step recovery.
+- Added focused static-build and Chromium interaction tests; removed legacy comparison UI assets from GitHub Pages output.
+- Left the existing GitHub repository name and URL unchanged until a separate authorized rename, avoiding unexpected link breakage.
+
 ## 0.11.0 — Better local models and measured agent behavior
 
 - Discover WebLLM-supported local model IDs dynamically; support stronger coder models where hardware permits and warn about GPU/memory needs. No silent downloads or invented model IDs.
