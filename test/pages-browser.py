@@ -70,7 +70,7 @@ try:
     page.locator('[data-section="editor"]').click()
     assert page.locator('#editorPanel').is_visible()
     if not used_fallback:
-      page.reload();page.locator('#fileList .file-row').first.wait_for(timeout=5000)
+      page.reload();page.locator('[data-section="files"]').click();page.locator('#fileList .file-row').first.wait_for(timeout=5000)
     page.screenshot(path=str(Path('/mnt/data/vynqode-ide-preview.png')),full_page=False)
     assert not errors,errors
     print('Vynqode: editing, syntax checks, undo, preview, reviewed AI edits, ZIP and responsive layout PASS')
