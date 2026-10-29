@@ -13,7 +13,9 @@
     "postinstall": "node scripts/copy-monaco.cjs",
     "eval:fixtures": "node evaluation/validate-fixtures.cjs",
     "test:runner-e2e": "node scripts/verify-runner-e2e.cjs",
-    "test:browser:agent": "python3 test/browser_workflow.py"
+    "test:browser:agent": "python3 test/browser_workflow.py",
+    "build:pages": "node scripts/build-pages.cjs",
+    "check:pages": "node --check scripts/build-pages.cjs && node --check pages/pages-static.js && node --test test/pages.test.cjs"
   },
   "description": "Local-first AI coding workspace and guarded coding agent",
   "engines": {

@@ -13,6 +13,10 @@ Arena Code is an independent, local-first AI coding workspace with an optional s
 - The real Docker verification command now exercises 1 MiB preview assets and WebSocket traffic in addition to the existing red/green test gate.
 - Optional `npm run test:browser:agent` is a real Chromium interaction test with a mock coding-model provider and a deliberately failing-then-passing npm test. Requires Python Playwright and a browser whose local navigation is not restricted. This developer environment blocked Chromium navigation, so **this test has not passed here**. A manual GitHub Actions workflow is included for execution on a normal Ubuntu runner.
 
+## GitHub Pages browser-only showcase
+
+The site can be published from the `gh-pages` branch. See [`docs/PAGES_DEPLOYMENT.md`](docs/PAGES_DEPLOYMENT.md). This edition has starter templates, an editable HTML canvas, labeled demo responses, and optional WebGPU-powered in-browser AI. **GitHub Pages cannot host the Node server, multi-file coding agent, Docker runner, collaboration accounts, or hosted preview API.**
+
 ## Local quick start
 
 Requirements: Node.js 20 or newer. Install dependencies to get the self-hosted Monaco editor assets; the editor can fall back to a CDN if those assets have not been built.

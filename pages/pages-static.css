@@ -1,0 +1,5 @@
+.pages-banner{display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 20px;background:#25233d;color:#e6e4fc;font:11px/1.6 system-ui,sans-serif;text-align:center;flex-wrap:wrap;border-bottom:1px solid #7f6cc044}
+.pages-banner a{color:#c3b5ff;text-decoration:underline;text-underline-offset:3px;font-weight:600;white-space:nowrap}
+body:not(.dark) .pages-banner{background:#ece9fb;color:#433f61}
+body:not(.dark) .pages-banner a{color:#5943a0}
+@media(max-width:680px){.pages-banner{padding:9px 12px;font-size:10px;gap:5px}.pages-banner span{max-width:100%}}
