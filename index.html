@@ -1,7 +1,57 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arena Code — Where code competes</title><link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./studio.css"><link rel="stylesheet" href="./pages-static.css"></head><body>
-<aside id="sidebar"><a class="brand" href="./" aria-label="Arena Code home"><span class="brand-icon">a<span>c</span></span><span>arena <b>code</b><small>THE CODING ARENA</small></span></a><button class="new-chat" id="newChat"><span>＋</span> New chat <kbd>⌘ K</kbd></button><nav><button id="searchBtn"><i data-icon="search"></i>Search chats <span class="nav-key">⌘ F</span></button><button id="leaderBtn"><i data-icon="trophy"></i>Leaderboard <span class="new-tag">NEW</span></button></nav><div class="history-label">RECENT CHATS <button id="clearHistory" title="Clear history">↺</button></div><div id="history"></div><div class="sidebar-bottom"><div class="build-note"><span class="mini-symbol">⌘</span><b>Built for your next big idea.</b><p>Less friction. More shipping.</p><a href="https://github.com/RaZeR877/Arena-Code" target="_blank" rel="noreferrer">Explore the community ↗</a></div><button class="settings-btn" id="settingsBtn"><span class="avatar">Y</span><span>Your workspace<small>Local workspace</small></span><i data-icon="settings"></i></button><div class="bottom-links"><span>Independent coding playground</span><button id="themeBtn" title="Toggle theme">☼</button></div></div></aside>
-<main><header><button id="sidebarToggle" class="icon-button" aria-label="Toggle sidebar"><i data-icon="panel"></i></button><div class="mode-wrap"><button id="modeBtn"> <i data-icon="swords"></i><span id="modeTitle">Battle</span><span class="chevron">⌄</span></button><div id="modeMenu" class="dropdown hidden"></div></div><span class="top-divider"></span><span class="top-sub">The best code wins.</span><div class="header-right"><span class="demo-pill" id="statusPill"><span></span> Demo workspace</span><button class="icon-button" id="helpBtn" aria-label="About">?</button><a class="github" href="https://github.com/RaZeR877/Arena-Code" target="_blank" rel="noreferrer"><i data-icon="github"></i><span>GitHub ↗</span></a></div></header>
-<section id="home"><div class="hero-eyebrow"><span></span> TWO MODELS. ONE GREAT IDEA.</div><h1>Your next idea.<br><span>Built better.</span></h1><p class="hero-sub">The world's best AI models. Your next great build.<br>Prompt, compare, and bring your code to life.</p><div class="composer" id="homeComposer"><textarea id="prompt" placeholder="What do you want to build?" aria-label="Coding prompt"></textarea><div id="attachment" class="attachment hidden"></div><div class="composer-bottom"><div class="composer-tools"><button class="icon-button" id="attachBtn" title="Attach a text or code file"><i data-icon="plus"></i></button><span class="tool-separator"></span><button id="languageBtn"><i data-icon="code"></i><span id="languageLabel">Auto</span><span>⌄</span></button></div><div class="send-group"><span>Shift + Enter for a new line</span><button id="sendBtn" class="send" title="Send prompt"><i data-icon="arrow"></i></button></div></div></div><input type="file" id="fileInput" hidden accept=".txt,.js,.ts,.jsx,.tsx,.html,.css,.py,.json,.md,.csv,.sql,.java,.go,.rs"><div class="mode-description"><i data-icon="swords"></i><span id="modeDesc">Two anonymous models. Compare their code. Pick your favorite.</span></div><div class="ideas-header"><span>A LITTLE INSPIRATION</span><span>Great things start with a prompt ↘</span></div><div class="ideas" id="ideas"></div><div class="home-foot"><span class="tiny-logo">a<span>c</span></span><span>Built to compare. Designed to create.</span></div></section>
-<section id="conversation" class="hidden"><div id="messages"></div><div id="followComposer" class="follow-composer"><textarea id="followPrompt" placeholder="Keep building…" aria-label="Follow up"></textarea><button id="followSend" class="send"><i data-icon="arrow"></i></button></div><p class="conversation-disclaimer">AI-generated code can contain errors. Review before deploying.</p></section>
-<footer id="footer">Responses may be inaccurate. Always review generated code.<span>Independent project. Not affiliated with Arena.</span></footer></main>
-<dialog id="modal"><div class="modal-header"><h2 id="modalTitle"></h2><button id="closeModal" class="icon-button">✕</button></div><div id="modalBody"></div></dialog><div id="toast" role="status"></div><script src="./pages-static.js"></script><script src="./app.js"></script><script src="./templates.js"></script><script src="./model-catalog.js"></script><script src="./studio.js"></script><script src="./browser-core.js"></script><script src="./ai-workflow.js"></script><script src="./browser-workspace.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Vynqode — a focused, local-first coding IDE with a file explorer, live preview, and optional on-device AI coding assistant.">
+  <title>Vynqode — AI Coding IDE</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./ide.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a href="./" class="brand" aria-label="Vynqode home"><span class="brand-symbol" aria-hidden="true">v<span>/</span></span><strong>vynqode</strong><span class="brand-edition">IDE</span></a>
+      <div class="project-pill" title="Click to rename your project"><button id="projectName" aria-label="Rename current project">Untitled project</button><span class="local-tag">LOCAL</span></div>
+      <div class="header-actions">
+        <button id="newProject" title="New project">New</button>
+        <button id="importProject" title="Import a ZIP, JSON or text files">Import</button>
+        <button id="exportProject" title="Download project ZIP">Export <span class="key-cap">ZIP</span></button>
+        <span class="top-divider"></span>
+        <button id="undoChange" title="Undo last saved project change">↶ <span class="desktop-label">Undo</span></button>
+        <a class="header-github" href="https://github.com/RaZeR877/Arena-Code" target="_blank" rel="noopener noreferrer" title="Source repository">GitHub ↗</a>
+      </div>
+    </header>
+    <nav class="mobile-nav" aria-label="Workspace sections"><button data-section="files">Files</button><button data-section="editor" class="active">Editor</button><button data-section="assistant">AI assistant</button></nav>
+    <div class="ide-layout">
+      <aside class="explorer" id="filesPanel" aria-label="File explorer">
+        <div class="pane-heading"><span>EXPLORER</span><button id="addFile" class="icon-action" title="Create a file" aria-label="Create file">＋</button></div>
+        <div class="project-tree-title"><span class="tree-caret">⌄</span><span id="treeProjectName">PROJECT</span></div>
+        <div id="fileList" class="file-list" role="listbox" aria-label="Project files"></div>
+        <div class="explorer-footer"><span class="explorer-dot"></span> Your files stay in this browser.<p>Export a ZIP to keep a backup. Nothing is uploaded to a server.</p></div>
+      </aside>
+      <main class="workspace" id="editorPanel">
+        <div class="editor-tabs" role="tablist" aria-label="Editor mode"><button id="editorTab" role="tab" aria-selected="true" class="active">⌘ &nbsp; Code</button><button id="previewTab" role="tab" aria-selected="false">◫ &nbsp; Preview</button><span id="fileBadge" class="file-badge">index.html</span><div class="tab-actions"><button id="renameFile" title="Rename selected file">Rename</button><button id="deleteFile" title="Delete selected file">Delete</button></div></div>
+        <div class="editor-surface" id="editorSurface"><div class="code-gutter" id="lineNumbers" aria-hidden="true">1</div><textarea id="codeEditor" aria-label="Source code editor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off"></textarea></div>
+        <div class="preview-surface hidden" id="previewSurface"><div class="preview-toolbar"><span><span class="live-dot"></span> Preview · sandboxed browser</span><button id="refreshPreview">↻ Refresh</button></div><iframe id="previewFrame" title="Running HTML preview" sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer"></iframe></div>
+        <div class="workspace-footer"><span id="statusMessage" role="status">Ready — local workspace</span><div><button id="checkSyntax">Check syntax</button><button id="saveFile" class="secondary-button">Save <span class="key-cap">Ctrl S</span></button><button id="runPreview" class="primary-button">▶ Preview</button></div></div>
+        <details class="diagnostics" id="diagnosticsPanel"><summary>Diagnostics <span id="diagnosticsCount">—</span></summary><pre id="diagnosticsText">Run syntax checks to inspect project files.</pre></details>
+      </main>
+      <aside class="assistant" id="assistantPanel" aria-label="AI coding assistant">
+        <div class="assistant-heading"><span class="assistant-icon">✦</span><div><strong>AI Assistant</strong><small>One workspace. One coding assistant.</small></div><span id="aiLight" class="ai-light"></span></div>
+        <div class="model-strip"><div><span class="micro-label">MODEL</span><strong id="activeModel">Not connected</strong></div><button id="configureModel">Configure</button></div>
+        <div class="chat-log" id="chatLog" aria-live="polite"><div class="welcome"><span class="sparkle">✳</span><h2>What are we building?</h2><p>Ask about your code or describe a change. AI can propose multi-file edits for you to review.</p><div class="suggestions"><button data-suggest="Explain what this project does">Explain project</button><button data-suggest="Improve the styling in index.html and style.css">Improve design</button><button data-suggest="Find a bug in the current file and suggest a fix">Find a bug</button></div></div></div>
+        <div class="chat-compose"><label for="assistantPrompt">YOUR REQUEST</label><textarea id="assistantPrompt" rows="4" placeholder="Ask a question or describe a feature to build…"></textarea><div class="compose-actions"><button id="askAssistant" title="Ask the model to explain or answer">Ask</button><button id="proposeEdits" class="primary-button">✦ Suggest edits</button></div><small>AI edits require approval. Code is not automatically executed.</small></div>
+      </aside>
+    </div>
+  </div>
+  <input type="file" id="importInput" hidden multiple accept=".zip,.json,.html,.css,.js,.ts,.jsx,.tsx,.md,.txt,.py,.svg,.xml,.yml,.yaml,.csv">
+  <dialog id="modelDialog" class="modal"><div class="modal-header"><div><h2>Configure AI</h2><p>Run a free open model on your GPU. No external API key required.</p></div><button data-close-modal aria-label="Close">✕</button></div><div class="model-body"><div class="model-notice">Local models need WebGPU and may download hundreds of MB or more. Small models can make coding mistakes. Nothing downloads until you request it.</div><label for="modelSelect">LOCAL CODING MODEL</label><select id="modelSelect"><option>Discover supported models first</option></select><p id="gpuStatus">Checking WebGPU support…</p><p id="modelStatus">No model loaded.</p><div class="progress-track"><div id="modelProgress"></div></div><div class="model-buttons"><button id="discoverModels">Find models</button><button id="loadModel" class="primary-button">Load selected model</button></div><p class="model-footnote">Cloud inference, hosted terminals and Docker builds require a separate backend; GitHub Pages runs only this browser IDE. Third-party model downloads are subject to their licences.</p></div></dialog>
+  <dialog id="reviewDialog" class="review-modal"><header><h2>Review AI changes</h2><button data-close-review aria-label="Close review">✕</button></header><p id="reviewDescription"></p><div id="reviewFiles"></div><footer><button id="rejectChanges">Reject</button><button id="approveChanges" class="primary-button">Approve changes</button></footer></dialog>
+  <script src="./browser-core.js"></script>
+  <script src="./model-catalog.js"></script>
+  <script src="./ai-workflow.js"></script>
+  <script src="./ide.js"></script>
+</body>
+</html>
