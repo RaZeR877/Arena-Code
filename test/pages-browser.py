@@ -3,28 +3,48 @@ Run: python3 test/pages-browser.py; needs Playwright and a local Chromium instal
 """
 from playwright.sync_api import sync_playwright
 from pathlib import Path
-import re, os
+import re, os, threading, functools
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from playwright.sync_api import Error as PlaywrightError
 ROOT = Path(__file__).resolve().parents[1] / 'dist/pages'
 html = (ROOT / 'index.html').read_text(encoding='utf-8')
 html = re.sub(r'<link rel="stylesheet" href="\./[^"]+">', '', html)
 html = re.sub(r'<script src="\./[^"]+"></script>', '', html)
-with sync_playwright() as p:
+# Serving from localhost avoids Chromium's about:blank + opaque iframe navigation bug
+# on GitHub Actions. Restricted local environments can use the inline fallback.
+class SilentHandler(SimpleHTTPRequestHandler):
+    def log_message(self, *args): pass
+handler = functools.partial(SilentHandler, directory=str(ROOT))
+server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
+threading.Thread(target=server.serve_forever, daemon=True).start()
+try:
+ with sync_playwright() as p:
     installed_chromium = os.getenv('ARENA_CHROMIUM', '/usr/bin/chromium')
     binary = installed_chromium if Path(installed_chromium).is_file() else None
-    browser = p.chromium.launch(headless=True, executable_path=binary, args=['--no-sandbox','--disable-dev-shm-usage','--disable-gpu'])
+    browser = p.chromium.launch(headless=True, executable_path=binary, args=['--no-sandbox','--disable-dev-shm-usage'])
     page = browser.new_page(viewport={'width': 1330, 'height': 900}, accept_downloads=True)
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.on('dialog', lambda dialog: dialog.accept())
-    page.set_content(html, wait_until='domcontentloaded')
-    # about:blank cannot write persistent storage in locked-down environments.
-    page.evaluate("""() => {const data = new Map(); Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k),clear:()=>data.clear()}})}""")
-    for src in ['pages-static.js','app.js','templates.js','studio.js','browser-core.js','browser-workspace.js']:
-        page.add_script_tag(content=(ROOT/src).read_text(encoding='utf-8'))
-    for style in ['style.css','studio.css','pages-static.css']:
-        page.add_style_tag(content=(ROOT/style).read_text(encoding='utf-8'))
-    page.evaluate("window.crypto.randomUUID ||= () => 'smoke-' + Math.random().toString(36).slice(2)")
-    page.evaluate("document.dispatchEvent(new Event('DOMContentLoaded'))")
+    try:
+        page.goto(f'http://127.0.0.1:{server.server_port}/', wait_until='domcontentloaded', timeout=8000)
+        page.locator('#pagesWorkspaceBtn').wait_for(timeout=5000)
+        print('Using real localhost HTTP origin for Chromium smoke test')
+    except PlaywrightError:
+        print('Localhost navigation blocked; using inline DOM fallback')
+        page.close()
+        page = browser.new_page(viewport={'width': 1330, 'height': 900}, accept_downloads=True)
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        page.on('dialog', lambda dialog: dialog.accept())
+        page.set_content(html, wait_until='domcontentloaded')
+        # about:blank cannot write persistent storage in locked-down environments.
+        page.evaluate("""() => {const data = new Map(); Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k),clear:()=>data.clear()}})}""")
+        for src in ['pages-static.js','app.js','templates.js','studio.js','browser-core.js','browser-workspace.js']:
+            page.add_script_tag(content=(ROOT/src).read_text(encoding='utf-8'))
+        for style in ['style.css','studio.css','pages-static.css']:
+            page.add_style_tag(content=(ROOT/style).read_text(encoding='utf-8'))
+        page.evaluate("window.crypto.randomUUID ||= () => 'smoke-' + Math.random().toString(36).slice(2)")
+        page.evaluate("document.dispatchEvent(new Event('DOMContentLoaded'))")
     page.locator('#pagesWorkspaceBtn').wait_for(timeout=5000)
     page.locator('#pagesWorkspaceBtn').click()
     assert page.locator('#arenaLocalDialog').evaluate('(e)=>e.open') is True
@@ -69,3 +89,5 @@ with sync_playwright() as p:
     assert not errors, errors
     print('Browser workflow passed: local project edit → syntax failure → undo → preview → ZIP export → Starter Lab')
     browser.close()
+finally:
+    server.shutdown()
