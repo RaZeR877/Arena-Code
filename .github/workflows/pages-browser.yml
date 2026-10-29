@@ -1,0 +1,37 @@
+name: Browser-only workspace E2E
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pages/**'
+      - 'public/**'
+      - 'scripts/build-pages.cjs'
+      - 'test/pages-browser.py'
+      - 'test/browser-project.test.cjs'
+      - 'test/pages.test.cjs'
+      - '.github/workflows/pages-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm run check:pages
+      - name: Install Chromium browser for Playwright
+        run: |
+          python -m pip install 'playwright>=1.55,<2'
+          python -m playwright install --with-deps chromium
+      - name: Validate project editing, undo, preview, ZIP and mock AI approvals
+        run: python test/pages-browser.py

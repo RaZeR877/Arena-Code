@@ -1,8 +1,17 @@
-# Arena Code 0.9.0
+# Arena Code 0.10.0
 
 Arena Code is an independent, local-first AI coding workspace with an optional self-hosted multi-user mode. It has a multi-file project explorer, Monaco editor, built-in JavaScript/TypeScript intelligence, optional Language Server Protocol (LSP) connections, approval-based coding-agent tools, local Node debugging, file history, Git support, and Docker-backed build/test workflows. It is not affiliated with Cursor, Replit, or Arena.ai.
 
 **This is a working development foundation, not a claim of full Cursor/Replit parity or production readiness.** Actual model quality, real Docker execution, hosted security, and deployment integrations must be verified in the target environment.
+
+## What changed in v0.10.0
+
+- GitHub Pages is no longer just an illustrative showcase: the browser-only edition now includes a multi-file text project explorer, saved local edits, project undo, standard ZIP import/export, code syntax checks and opaque-origin HTML/CSS/classic-JS previews.
+- Users can load the existing browser-local WebGPU model and ask for a **reviewable, approval-based multi-file edit**. Edits are limited to five text files at a time; source is displayed side by side before approval. No remote code execution or model service is silently invoked.
+- Added cross-language ZIP compatibility, malicious archive/path rejection, and a real Chromium UI smoke test with mocked model output, including red/green syntax, undo and preview. Real coding-model accuracy and server-side test execution remain separate validation milestones.
+- GitHub Pages deployment now has an optional official Actions workflow, and the browser workflow has its own browser CI check.
+
+**What v0.10.0 does not accomplish:** GitHub Pages still cannot run the server's Docker worker, authenticated multi-user collaboration, hosted Git tools, full language servers, or remote build/test commands. The browser editor is intentionally a lightweight textarea and is not a full Monaco/VS Code replacement. Live hosted deployment and real-model benchmark scores remain unverified.
 
 ## What changed in v0.9.0
 

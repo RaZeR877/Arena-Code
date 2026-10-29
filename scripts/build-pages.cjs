@@ -22,6 +22,10 @@ if (html.includes('href="/')) throw new Error('Found a root-relative link; GitHu
 fs.writeFileSync(path.join(out, 'index.html'), html);
 fs.copyFileSync(path.join(root, 'pages', 'pages-static.js'), path.join(out, 'pages-static.js'));
 fs.copyFileSync(path.join(root, 'pages', 'pages-static.css'), path.join(out, 'pages-static.css'));
+for (const file of ['browser-core.js', 'browser-workspace.js']) fs.copyFileSync(path.join(root, 'pages', file), path.join(out, file));
+html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
+html = html.replace('<script src="./studio.js"></script>', '<script src="./studio.js"></script><script src="./browser-core.js"></script><script src="./browser-workspace.js"></script>');
+fs.writeFileSync(path.join(out, 'index.html'), html);
 html = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
 html = html.replace('<link rel="stylesheet" href="./studio.css">', '<link rel="stylesheet" href="./studio.css"><link rel="stylesheet" href="./pages-static.css">');
 fs.writeFileSync(path.join(out, 'index.html'), html);

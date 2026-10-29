@@ -1,12 +1,16 @@
 # Arena Code on GitHub Pages
 
-GitHub Pages hosts **static files only**. Arena Code's full Node.js/runner stack does not run there. The `gh-pages` branch contains a safe, browser-only version of the existing interface, including:
+GitHub Pages hosts **static files only**. Arena Code's full Node.js/runner stack does not run there. The `gh-pages` branch contains a **browser-only workspace** built from the project source. The website now supports:
 
-- Four interactive starter projects and an editable single-file HTML canvas.
-- Clearly labeled, illustrative demo comparisons (no model/API connection).
-- Optional browser-local WebLLM inference, requiring a supported WebGPU browser and a sizable third-party model download. This route has not been validated end-to-end on every client GPU.
-- Local browser conversation history and canvas revisions. Browser storage is not cloud synchronization.
-- No server-side project/file APIs, login, Docker execution, autonomous coding agent, hosted preview API, or backend credentials. These intentionally display a notice directing users to the full application.
+- Local multi-file text projects, file creation/renaming/deletion, persistence in browser storage, a one-step project undo snapshot, and standard ZIP import/export (UTF-8 text only).
+- Basic JavaScript and JSON parsing checks. This is **not** equivalent to executing `npm test`, bundling, linting, TypeScript language analysis, or debugging.
+- Sandboxed preview of `index.html`, including local CSS stylesheets and classic JavaScript. ES module dependency imports, `npm` builds, package installs, hosted previews and server-side tests are not supported.
+- Optional *on-device* WebLLM agent **suggestions** with a full before/after review dialog, explicit approval, and syntax checks. No arbitrary terminal access. A real GPU/model is required; automated tests use a mock model and do not prove coding quality.
+- Four interactive starter projects, an editable single-file HTML canvas, and labeled demonstration responses.
+
+**Safety, privacy and limits:** All work is browser-local and can disappear if browser site data is cleared. Export ZIP backups regularly. There is no remote Git synchronization, cloud account, or backend. Text projects are limited to 100 files, 400 KiB per file and 3 MiB combined. ZIP uploads are capped at 5 MiB and reject traversal, environment/secret files, invalid checksums, encrypted files and unsupported ZIP64. The AI runtime is downloaded from third-party CDNs; do not treat loading external JavaScript as a zero-risk privacy guarantee. Browser previews use opaque-origin iframes, but generated code can make outbound network requests. Do not paste credentials into generated websites.
+
+Full functionality (accounts, real multi-user collaboration, Git operations, Docker execution, LSP and isolated builds) still requires the Node.js backend on a separate server. GitHub Pages cannot provide those services.
 
 ## One-time Pages activation
 
@@ -23,10 +27,11 @@ In the primary repository (`main`):
 
 ```sh
 node scripts/build-pages.cjs
-node --test test/pages.test.cjs
+npm run check:pages
+python3 test/pages-browser.py  # requires Python Playwright + Chromium
 ```
 
-The generated contents appear in `dist/pages/`. Publish that *directory's contents* into the root of `gh-pages` (not as a nested directory). The `gh-pages` snapshot was uploaded directly for the first release. Later changes to `main` do **not** automatically update the static `gh-pages` branch; rebuild and republish when you want a new Pages release.
+The generated contents appear in `dist/pages/`. Publish that *directory's contents* into the root of `gh-pages` (not as a nested directory). The `gh-pages` snapshot was uploaded directly for the first release. The `gh-pages` branch must be updated after a source change. For manual publication, replace its root assets with `dist/pages/` and push. For deployment using GitHub Actions rather than branch publishing, use the optional `pages-deploy.yml` workflow, which requires selecting **GitHub Actions** as the Pages source in repository settings. The workflow uploads only static assets and never packages server code or credentials.
 
 ## Backend deployment
 

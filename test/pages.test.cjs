@@ -13,7 +13,7 @@ test('GitHub Pages build is self-contained, subpath-safe, and excludes the priva
   const dir = path.join(root, 'dist', 'pages');
   const entries = fs.readdirSync(dir);
   assert.deepEqual(entries.sort(), [
-    '.nojekyll', 'app.js', 'index.html', 'pages-static.css', 'pages-static.js',
+    '.nojekyll', 'app.js', 'browser-core.js', 'browser-workspace.js', 'index.html', 'pages-static.css', 'pages-static.js',
     'robots.txt', 'studio.css', 'studio.js', 'style.css', 'templates.js'
   ].sort());
   const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
@@ -21,7 +21,8 @@ test('GitHub Pages build is self-contained, subpath-safe, and excludes the priva
   assert.match(html, /src="\.\/studio\.js"/);
   assert.match(html, /href="\.\/style\.css"/);
   assert.doesNotMatch(html, /(?:src|href)="\//);
-  assert.doesNotMatch(html, /workspace\.js|editor\.js/);
+  assert.match(html, /src="\.\/browser-workspace\.js"/);
+  assert.doesNotMatch(html, /src="\.\/workspace\.js"|editor\.js/);
   for (const file of ['app.js', 'studio.js', 'templates.js']) {
     assert.ok(fs.statSync(path.join(dir, file)).size > 1000, `Missing ${file}`);
   }
@@ -52,6 +53,7 @@ test('Pages mode routes demo chat/status locally and fails closed for server-onl
   assert.equal(parsed.demo, true);
   assert.equal(parsed.staticPages, true);
   assert.equal(parsed.features.serverProjects, false);
+  assert.equal(parsed.features.browserProjects, true);
   const chat = await context.window.fetch('/api/chat', { method: 'POST' });
   assert.equal((await chat.json()).demo, true);
   const denied = await context.window.fetch('/api/projects');

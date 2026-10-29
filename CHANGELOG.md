@@ -1,3 +1,10 @@
+# v0.10.0 — Usable browser coding workspace
+
+- Replaced the Pages-only “backend unavailable” project hub with a local multi-file workspace, preview, text-file ZIP exchange, basic checks, and undo.
+- Added approval-based browser-AI multi-file edit suggestions and a before/after review surface.
+- Added 6 source-core tests, Pages structural coverage, and an actual Chromium workflow against the static artifact.
+- Retained clear limits: no server-executed tests, cloud hosting, Git sync or Docker on Pages; actual model quality requires live benchmarking.
+
 # Arena Code v0.9.0 — 2026-10-29
 
 ### Execution and previews
