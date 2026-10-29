@@ -13,7 +13,7 @@ test('GitHub Pages build is self-contained, subpath-safe, and excludes the priva
   const dir = path.join(root, 'dist', 'pages');
   const entries = fs.readdirSync(dir);
   assert.deepEqual(entries.sort(), [
-    '.nojekyll', 'app.js', 'browser-core.js', 'browser-workspace.js', 'index.html', 'pages-static.css', 'pages-static.js',
+    '.nojekyll', 'app.js', 'ai-workflow.js', 'browser-core.js', 'browser-workspace.js', 'index.html', 'model-catalog.js', 'pages-static.css', 'pages-static.js',
     'robots.txt', 'studio.css', 'studio.js', 'style.css', 'templates.js'
   ].sort());
   const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
@@ -22,6 +22,8 @@ test('GitHub Pages build is self-contained, subpath-safe, and excludes the priva
   assert.match(html, /href="\.\/style\.css"/);
   assert.doesNotMatch(html, /(?:src|href)="\//);
   assert.match(html, /src="\.\/browser-workspace\.js"/);
+  assert.match(html, /src="\.\/ai-workflow\.js"/);
+  assert.match(html, /src="\.\/model-catalog\.js"/);
   assert.doesNotMatch(html, /src="\.\/workspace\.js"|editor\.js/);
   for (const file of ['app.js', 'studio.js', 'templates.js']) {
     assert.ok(fs.statSync(path.join(dir, file)).size > 1000, `Missing ${file}`);

@@ -1,8 +1,12 @@
-# Arena Code 0.10.0
+# Arena Code 0.11.0
 
 Arena Code is an independent, local-first AI coding workspace with an optional self-hosted multi-user mode. It has a multi-file project explorer, Monaco editor, built-in JavaScript/TypeScript intelligence, optional Language Server Protocol (LSP) connections, approval-based coding-agent tools, local Node debugging, file history, Git support, and Docker-backed build/test workflows. It is not affiliated with Cursor, Replit, or Arena.ai.
 
 **This is a working development foundation, not a claim of full Cursor/Replit parity or production readiness.** Actual model quality, real Docker execution, hosted security, and deployment integrations must be verified in the target environment.
+
+## v0.11.0 — local AI quality and evaluation
+
+The free WebGPU AI picker now discovers supported models dynamically from WebLLM rather than hardcoding only 0.5B / 1.5B choices. Depending on browser GPU and memory it can list stronger 3B/7B coding models, but these require significant device resources and are never downloaded silently. The browser AI workspace now sends relevant bounded file context, validates proposed edits, requests one correction for malformed or syntax-invalid patches, and still requires approval before applying anything. A new **Test my AI (2 tasks)** button runs a small model-in-the-loop *structural* evaluation and exports JSON; it is not a real software benchmark. Existing full-server five-task behavioral evaluation still requires Docker and a configured real model. See [`docs/AI_ENGINE.md`](docs/AI_ENGINE.md).
 
 ## What changed in v0.10.0
 

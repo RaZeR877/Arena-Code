@@ -1,3 +1,11 @@
+## 0.11.0 — Better local models and measured agent behavior
+
+- Discover WebLLM-supported local model IDs dynamically; support stronger coder models where hardware permits and warn about GPU/memory needs. No silent downloads or invented model IDs.
+- Rank relevant project context and explicitly identify omitted/truncated files so the model cannot silently replace a file it has not fully seen.
+- Validate model-proposed JSON patches and parseable JavaScript/JSON, retry once on invalid output, and preserve mandatory before/after user approvals.
+- Add disposable, clearly labeled **structural-only** WebGPU evaluation and downloadable result JSON. Real behavior still requires the separate Docker benchmark.
+- Add model discovery, error retry, incomplete-context, and evaluation tests, plus browser smoke coverage. No real AI score is claimed in this release.
+
 # v0.10.0 — Usable browser coding workspace
 
 - Replaced the Pages-only “backend unavailable” project hub with a local multi-file workspace, preview, text-file ZIP exchange, basic checks, and undo.

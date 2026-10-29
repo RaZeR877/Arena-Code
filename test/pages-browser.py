@@ -39,7 +39,7 @@ try:
         page.set_content(html, wait_until='domcontentloaded')
         # about:blank cannot write persistent storage in locked-down environments.
         page.evaluate("""() => {const data = new Map(); Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k),clear:()=>data.clear()}})}""")
-        for src in ['pages-static.js','app.js','templates.js','studio.js','browser-core.js','browser-workspace.js']:
+        for src in ['pages-static.js','app.js','templates.js','model-catalog.js','studio.js','browser-core.js','ai-workflow.js','browser-workspace.js']:
             page.add_script_tag(content=(ROOT/src).read_text(encoding='utf-8'))
         for style in ['style.css','studio.css','pages-static.css']:
             page.add_style_tag(content=(ROOT/style).read_text(encoding='utf-8'))
@@ -65,15 +65,23 @@ try:
     page.frame_locator('#arenaLocalFrame').locator('h1').wait_for(timeout=5000)
     assert page.frame_locator('#arenaLocalFrame').locator('h1').inner_text().startswith('Hello')
     page.frame_locator('#arenaLocalFrame').locator('#hello').click()
-    assert 'It works!' in page.frame_locator('#arenaLocalFrame').locator('h1').inner_text()
+    page.frame_locator('#arenaLocalFrame').locator('h1').filter(has_text='It works!').wait_for(timeout=5000)
     # A deterministic *mock* WebLLM response exercises approval, multi-file edits, and undo.
     # This validates UI wiring, not a real coding model's quality.
-    page.evaluate("""() => {studio.ready=true;studio.engine={chat:{completions:{create:async ()=>({choices:[{message:{content:JSON.stringify({summary:'Add a second heading',changes:[{path:'index.html',content:'<!doctype html><html><body><h1>Mock AI approved change</h1><script src="app.js"></script></body></html>'},{path:'extra.js',content:'const verified = true;'}]})}}]})}}}}""")
+    page.evaluate("""() => {
+      studio.ready=true;studio.model='Mock-Local-Coder-1.5B';window._arenaModelCalls=0;
+      studio.engine={chat:{completions:{create:async ({messages})=>{
+        window._arenaModelCalls++;
+        if(window._arenaModelCalls===1) return {choices:[{message:{content:JSON.stringify({summary:'invalid JS',changes:[{path:'extra.js',content:'const = ;'}]})}}]};
+        return {choices:[{message:{content:JSON.stringify({summary:'Add a second heading',changes:[{path:'index.html',content:'<!doctype html><html><body><h1>Mock AI approved change</h1><script src=\"app.js\"></script></body></html>'},{path:'extra.js',content:'const verified = true;'}]})}}]};
+      }}}};
+    }""")
     page.locator('#arenaLocalTask').fill('Add a second heading')
     page.locator('[data-action="agent"]').click()
     page.get_by_text('Review every proposed AI file change').wait_for(timeout=5000)
     assert page.locator('.arena-review-files details').count() == 2
     assert page.locator('.arena-local-file[data-path="extra.js"]').count() == 0
+    assert page.evaluate('window._arenaModelCalls') == 2, 'syntax failure should trigger one model retry'
     page.get_by_role('button', name='Approve 2 changes').click()
     page.locator('.arena-local-file[data-path="extra.js"]').wait_for(timeout=5000)
     page.locator('[data-action="restore"]').click()
@@ -82,10 +90,33 @@ try:
     with page.expect_download(timeout=5000) as item:
         page.locator('[data-action="export"]').click()
     assert item.value.suggested_filename.endswith('.zip')
+    page.evaluate("""() => {
+      studio.engine={chat:{completions:{create:async ({messages})=>{
+        const task=messages.at(-1).content;
+        const changes=task.includes('status-good')
+          ? [{path:'index.html',content:'<html><body><div class=\"status-good\">ok</div></body></html>'},{path:'style.css',content:'.status-good{color:green;}'}]
+          : [{path:'index.html',content:'<html><body><div id=\"arenaBadge\">ok</div></body></html>'},{path:'app.js',content:'document.querySelector(\"#arenaBadge\")'}];
+        return {choices:[{message:{content:JSON.stringify({summary:'evaluation only',changes})}}]};
+      }}}};
+    }""")
+    with page.expect_download(timeout=10000) as evaluation_download:
+        page.locator('[data-action="benchmark"]').click()
+    assert evaluation_download.value.suggested_filename.endswith('.json')
+    assert '2/2 structural tasks passed' in page.locator('#arenaLocalStatus').inner_text()
+    assert 'No functional execution' in page.locator('#arenaLocalConsole').inner_text()
     page.locator('[data-action="close"]').click()
     page.locator('#templatesBtn').click()
     page.locator('.template-card').first.click()
     assert page.locator('#codeEditor').count() == 1
+    page.locator('#modal').evaluate('(e)=>e.close()')
+    page.evaluate("""() => {
+      studio.modelChoices=ArenaModelCatalog.availableModels([
+        {model_id:'Qwen2.5-0.5B-Instruct-q4f16_1-MLC'},
+        {model_id:'Qwen2.5-Coder-7B-Instruct-q4f16_1-MLC'}]);
+    }""")
+    page.locator('#aiBtn').click()
+    assert page.locator('#localModel option').count() == 2
+    assert 'High GPU memory' in page.locator('#localModel option').last.inner_text()
     assert not errors, errors
     print('Browser workflow passed: local project edit → syntax failure → undo → preview → ZIP export → Starter Lab')
     browser.close()
