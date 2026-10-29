@@ -1,0 +1,108 @@
+name: arena-code
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: arena
+      POSTGRES_USER: arena
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a long random POSTGRES_PASSWORD in .env}
+    volumes:
+      - arena_db:/var/lib/postgresql/data
+    networks: [db_private]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arena -d arena"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      ARENA_ALLOW_REMOTE: "1"
+      ARENA_HOSTED_MODE: "1"
+      ARENA_ALLOW_SIGNUP: ${ARENA_ALLOW_SIGNUP:-1}
+      ARENA_COOKIE_SECURE: "1"
+      PUBLIC_ORIGIN: https://${ARENA_DOMAIN:?Set ARENA_DOMAIN in .env}
+      DATABASE_URL: postgresql://arena:${POSTGRES_PASSWORD}@db:5432/arena
+      PG_POOL_SIZE: ${PG_POOL_SIZE:-10}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://openrouter.ai/api/v1}
+      AI_MODELS: ${AI_MODELS:-openai/gpt-4.1}
+      ARENA_RUNNER_URL: http://runner:4311
+      ARENA_RUNNER_TOKEN: ${ARENA_RUNNER_TOKEN:?Set a long random ARENA_RUNNER_TOKEN in .env}
+      ARENA_LSP_LANGUAGES: ${ARENA_LSP_LANGUAGES:-}
+      ARENA_DEPLOY_WEBHOOK_URL: ${ARENA_DEPLOY_WEBHOOK_URL:-}
+      ARENA_DEPLOY_WEBHOOK_TOKEN: ${ARENA_DEPLOY_WEBHOOK_TOKEN:-}
+    depends_on:
+      db: { condition: service_healthy }
+      runner: { condition: service_healthy }
+    expose: ["3000"]
+    networks: [edge, db_private, runner_private]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/status').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 4s
+      retries: 10
+
+  # The runner requires the host Docker socket. Treat it as host-root-equivalent and use a dedicated Linux VM.
+  # The worker and Docker bind mount intentionally share the same absolute data path.
+  runner:
+    build:
+      context: ..
+      dockerfile: runner/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 4311
+      NODE_ENV: production
+      ARENA_RUNNER_TOKEN: ${ARENA_RUNNER_TOKEN:?Set a long random ARENA_RUNNER_TOKEN in .env}
+      ARENA_RUNNER_DATA: ${ARENA_RUNNER_DATA_HOST:-/srv/arena-runner}
+      ARENA_DOCKER_IMAGE: ${ARENA_DOCKER_IMAGE:-node:22-alpine}
+      ARENA_RUNNER_CONCURRENCY: ${ARENA_RUNNER_CONCURRENCY:-2}
+      ARENA_PREVIEW_MAX_SESSIONS: ${ARENA_PREVIEW_MAX_SESSIONS:-4}
+      ARENA_PREVIEW_TTL_MS: ${ARENA_PREVIEW_TTL_MS:-900000}
+      ARENA_LSP_IMAGES: ${ARENA_LSP_IMAGES:-}
+      ARENA_LSP_MAX_SESSIONS: ${ARENA_LSP_MAX_SESSIONS:-8}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${ARENA_RUNNER_DATA_HOST:-/srv/arena-runner}:${ARENA_RUNNER_DATA_HOST:-/srv/arena-runner}
+    expose: ["4311"]
+    networks: [runner_private]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4311/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      ARENA_DOMAIN: ${ARENA_DOMAIN:?Set ARENA_DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+    networks: [edge]
+
+volumes:
+  arena_db:
+  caddy_data:
+  caddy_config:
+networks:
+  edge:
+  db_private:
+    internal: true
+  runner_private:
+    internal: true
