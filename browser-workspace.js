@@ -3,7 +3,8 @@
 (function () {
   'use strict';
   const core = window.ArenaBrowserCore;
-  if (!core) throw Error('Arena browser workspace requires browser-core.js');
+  const workflow = window.ArenaAIWorkflow;
+  if (!core || !workflow) throw Error('Arena browser workspace requires the browser project core and AI workflow');
   const KEY = 'arena-pages-workspace-v1', BACKUP = 'arena-pages-workspace-backup-v1';
   const state = { project: null, current: 'index.html', dirty: false, log: [], busy: false, frameNonce: '', dialog: null };
   const $ = (selector, node = document) => node.querySelector(selector);
@@ -62,7 +63,7 @@
           </section>
           <section class="arena-local-preview"><div class="arena-local-caption">SANDBOXED PREVIEW <span>HTML + CSS + classic JS</span></div><iframe id="arenaLocalFrame" title="Project preview" sandbox="allow-scripts allow-forms allow-downloads" referrerpolicy="no-referrer"></iframe><div id="arenaLocalConsole" class="arena-local-console">Preview logs appear here.</div></section>
         </div>
-        <footer class="arena-local-agent"><div class="arena-local-agent-title"><strong>✦ On-device AI edit assistant</strong><small>Requires explicitly loading the free WebGPU model. Every change needs approval; no shell commands.</small></div><textarea id="arenaLocalTask" placeholder="Example: add a character counter to the page, updating both index.html and app.js" aria-label="Task for local coding model"></textarea><button data-action="agent">Suggest edits</button><button data-action="load-ai">Load browser AI</button></footer>
+        <footer class="arena-local-agent"><div class="arena-local-agent-title"><strong>✦ On-device AI edit assistant</strong><small>Requires explicitly loading the free WebGPU model. Every change needs approval; no shell commands.</small></div><textarea id="arenaLocalTask" placeholder="Example: add a character counter to the page, updating both index.html and app.js" aria-label="Task for local coding model"></textarea><button data-action="agent">Suggest edits</button><button data-action="benchmark">Test my AI (2 tasks)</button><button data-action="load-ai">Load browser AI</button></footer>
         <input type="file" id="arenaLocalImport" multiple hidden accept=".zip,.json,.html,.css,.js,.ts,.jsx,.tsx,.md,.txt,.py,.svg,.xml,.yml,.yaml,.jsonc,.csv">
       </div>`;
     document.body.append(dialog); state.dialog = dialog;
@@ -204,16 +205,14 @@
     const startingRevision = state.project.revision;
     state.busy = true; const button = $('[data-action="agent"]', state.dialog); button.disabled = true;
     try {
-      const context = JSON.stringify(state.project.files);
-      if (context.length > 36_000) throw Error('Project context exceeds the local model limit. Reduce files or use the full server-based agent.');
-      const messages = [
-        { role: 'system', content: 'You are a careful coding assistant. Respond with one JSON object only: {"summary":"...","changes":[{"path":"relative/path.js","content":"full new source"}]}. You may edit up to 5 existing or new text files. No shell commands, no secrets, no deleting files unless required. Preserve unrelated files. Return complete contents for changed files only. Never claim your edits were tested.' },
-        { role: 'user', content: 'TASK: ' + task + '\nPROJECT FILES (JSON):\n' + context }
-      ];
       flash('Local AI is suggesting changes. Nothing will be applied without approval.');
-      const response = await studio.engine.chat.completions.create({ messages, temperature: 0.1, max_tokens: 3000 });
+      const result = await workflow.propose({
+        engine: studio.engine, project: state.project, task, current: state.current,
+        onProgress: message => flash(message)
+      });
       if (state.project.revision !== startingRevision || state.dirty) throw Error('Project changed while the model was working. No stale edits were applied. Please run the task again.');
-      const proposal = core.parseSuggestion(response.choices?.[0]?.message?.content || '', state.project);
+      const proposal = result.proposal;
+      flash(`AI proposed ${proposal.changes.length} files in ${result.attempts} attempt(s); review before applying. Unverified parsers: ${result.checks.unverified.length}.`);
       const approved = await reviewChanges(proposal);
       if (!approved) { flash('AI proposal rejected. No project files changed.'); return; }
       if (state.project.revision !== startingRevision || state.dirty) throw Error('Files changed during review. No stale AI edits applied.');
@@ -223,6 +222,22 @@
       }
     } catch (e) { flash('AI edit not applied: ' + e.message, true); }
     finally { state.busy = false; button.disabled = false; }
+  }
+  async function benchmarkAI() {
+    if (state.busy) return;
+    if (typeof studio === 'undefined' || !studio.ready || !studio.engine) return flash('Load a real WebGPU model before testing coding performance.', true);
+    state.busy = true;
+    const button = $('[data-action="benchmark"]', state.dialog); if (button) button.disabled = true;
+    try {
+      flash('Running two disposable model-only evaluation tasks; your project is not modified.');
+      const report = await workflow.evaluate(studio.engine, message => flash(message));
+      report.model = studio.model;
+      try { localStorage.setItem('arena-pages-ai-last-eval', JSON.stringify(report)); } catch {}
+      $('#arenaLocalConsole').textContent = report.results.map(x => `${x.passesStructuralChecks ? 'PASS' : 'FAIL'} · ${x.name} (${x.elapsedMs} ms): ${x.reason}`).join('\n') + '\n' + report.caveat;
+      flash(`Local model ${studio.model}: ${report.score}/${report.total} structural tasks passed. This is NOT an executed-code benchmark.`, report.score < report.total);
+      download(new Blob([JSON.stringify(report, null, 2)], { type:'application/json' }), 'arena-local-ai-evaluation.json');
+    } catch(e) { flash('AI evaluation failed: ' + e.message, true); }
+    finally { state.busy = false; if (button) button.disabled = false; }
   }
   async function handle(action) {
     switch (action) {
@@ -238,6 +253,7 @@
       case 'export': if (state.dirty && !saveOpen()) return; download(new Blob([core.zip(state.project)], { type: 'application/zip' }), filename() + '.zip'); flash('Downloaded a standard ZIP backup.'); break;
       case 'restore': { const raw = localStorage.getItem(BACKUP); if (!raw) return flash('No last-change checkpoint exists in this browser.', true); if (!confirm('Restore the previous project state? All changes since the last checkpoint will be replaced.')) return; const restored = core.normalize(JSON.parse(raw)); const current = state.project; persist(restored); localStorage.setItem(BACKUP, JSON.stringify(current)); state.project = restored; if (!Object.hasOwn(restored.files, state.current)) state.current = Object.keys(restored.files)[0] || null; render(); flash('Last project change undone.'); break; }
       case 'agent': await aiSuggest(); break;
+      case 'benchmark': await benchmarkAI(); break;
       case 'load-ai': if (state.dirty && !saveOpen()) return; state.dialog.close(); if (typeof openAI === 'function') openAI(); else alert('Open Free AI engine in the sidebar and load a model.'); break;
     }
   }

@@ -46,3 +46,6 @@ body:not(.dark) .pages-banner a{color:#5943a0}
 .arena-review-dialog>footer{display:flex;justify-content:end;gap:12px;border-top:1px solid #394058;border-bottom:0}
 .arena-review-dialog>footer button{background:#313a50;color:#fff;border:1px solid #46516b;padding:10px 16px;border-radius:8px;cursor:pointer}.arena-review-dialog>footer .arena-review-apply{background:#735bc6;border:1px solid #978ae0}
 @media(max-width:600px){.arena-review-diff{grid-template-columns:1fr}.arena-review-dialog{height:90vh}.arena-review-files{height:calc(100% - 195px)}}
+
+/* Real model picker and on-device evaluation status */
+.model-explorer-controls{display:grid;gap:8px;margin:9px 0 12px}.model-explorer-controls button{width:max-content;max-width:100%}.model-explorer-controls small{font-size:11px;line-height:1.5;color:var(--muted)}.arena-local-agent button[data-action="benchmark"]{border:1px solid var(--line)}
