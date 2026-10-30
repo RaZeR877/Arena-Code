@@ -38,5 +38,5 @@
     catch(error){button.textContent='Retry smart editor';button.title=error.message;document.getElementById('statusMessage').textContent=error.message;}
     finally{loading=false;button.disabled=false;}
   };
-  window.VynqodeEditor={sync,get enabled(){return enabled;}};
+  window.VynqodeEditor={sync,select(offset,length){if(editor&&enabled){const model=editor.getModel();const start=model.getPositionAt(offset),end=model.getPositionAt(offset+length);editor.setSelection(new monaco.Range(start.lineNumber,start.column,end.lineNumber,end.column));editor.revealPositionInCenter(start);editor.focus();}else{input.focus();input.setSelectionRange(offset,offset+length);}},insert(text){if(editor&&enabled){editor.executeEdits('mobile-keyboard',[{range:editor.getSelection(),text}]);editor.focus();}else{input.setRangeText(text,input.selectionStart,input.selectionEnd,'end');input.dispatchEvent(new Event('input'));input.focus();}},get enabled(){return enabled;}};
 })();

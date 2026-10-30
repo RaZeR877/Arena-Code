@@ -1,0 +1,1 @@
+<data-extraction-rules><cloud-backup><exclude domain="sharedpref" path="vynqode-ai-vault.xml" /></cloud-backup><device-transfer><exclude domain="sharedpref" path="vynqode-ai-vault.xml" /></device-transfer></data-extraction-rules>

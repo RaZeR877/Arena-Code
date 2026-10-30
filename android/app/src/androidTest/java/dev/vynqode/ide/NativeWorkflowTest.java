@@ -38,6 +38,11 @@ public class NativeWorkflowTest {
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)) {
             until(scenario,"Boolean(window.Vynqode && window.VynqodeNative && window.VynqodeLibrary)");
             assertEquals("true",js(scenario,"window.VynqodeNative.available"));
+            // Real bundled VM execution in Android WebView; no model or paid API request.
+            js(scenario,"window.__vm=null;VynqodePlayground.run({files:{'test.cjs':\"const assert=require('assert');assert.equal(2+3,5);assert.equal(typeof fetch,'undefined');assert.equal(typeof Capacitor,'undefined');\"}},'test.cjs',true).then(result=>window.__vm=result);true");
+            until(scenario,"Boolean(window.__vm)");assertEquals("true",js(scenario,"window.__vm.ok && window.__vm.assertions===3"));
+            js(scenario,"window.__providers=null;VynqodeNative.ai.providers().then(result=>window.__providers=result);true");
+            until(scenario,"Boolean(window.__providers)");assertEquals("true",js(scenario,"window.__providers.providers.length>=8 && window.__providers.providers.every(provider=>!('key' in provider))"));
             // Preserve the user's existing browser project/draft if run on a non-empty test device.
             js(scenario,"window.__backup={};for(const key of ['vynqode-project-v1','vynqode-undo-v1','vynqode-editor-draft-v1'])window.__backup[key]=localStorage.getItem(key);localStorage.setItem('vynqode-native-test-backup',JSON.stringify(window.__backup));true");
             try {

@@ -1,4 +1,4 @@
-# Vynqode — AI provider setup (v0.14)
+# Vynqode — AI provider setup
 
 Vynqode offers a **single assistant** with multiple interchangeable inference providers. This is an API connector for the coding assistant and reviewed project edits, **not** an embedded ChatGPT account or subscription. ChatGPT Plus/Pro subscriptions do not automatically provide OpenAI API usage; API calls may incur separate charges.
 
@@ -70,3 +70,11 @@ When you use **Ask** or **Suggest edits**, the selected project context (file na
 OpenAI, OpenRouter, Groq, DeepSeek, Ollama and compatible endpoints use `POST /chat/completions`; Anthropic uses `POST /v1/messages`; Gemini uses `POST /v1beta/models/{model}:generateContent`. The model allowlist is set on the server. Other API features (streaming, tool calling, multimodal inputs, reasoning-specific settings) are not implemented yet.
 
 Official provider references: [OpenAI](https://developers.openai.com/api/reference/chat-completions/overview), [Anthropic](https://platform.claude.com/docs/en/api/overview), [Gemini](https://ai.google.dev/api/generate-content), [Groq](https://console.groq.com/docs/openai), [OpenRouter](https://openrouter.ai/developers).
+
+## Android native setup
+
+The Android workflow draft adds **Connect AI → API providers → Configure securely on this device**. Enter the key only in the native Android dialog. The native bridge returns provider/model metadata, not credentials. AES-GCM encryption uses a device Android Keystore key; encrypted credential preferences are excluded from Android backups. Removing saved credentials is available in the same panel. No external API request occurs during configuration.
+
+OpenAI, Anthropic, Gemini, OpenRouter, Groq, DeepSeek, device-local Ollama and a custom OpenAI-compatible HTTPS endpoint have native adapters. Model IDs are editable allowlists, not live discovery. Redirects are refused. Requests use bounded context/output; HTTP failures do not return provider bodies that might echo credentials. **Use selected API** requires explicit consent to send project context and potential provider charges. Each user request may invoke retries as described by the edit workflow.
+
+Ollama is not bundled. An independently running service must listen on device loopback `127.0.0.1:11434`; a phone's loopback is not the developer computer. The default budget remains ₹0, and cloud configuration is optional. Static websites still cannot store/use provider secrets securely. Native provider format tests use fake transports; no real provider/account/model quality is certified. See [Android workflow validation](ANDROID_WORKFLOWS.md).

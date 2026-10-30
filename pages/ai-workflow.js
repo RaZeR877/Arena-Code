@@ -1,18 +1,18 @@
 /* Safe browser-local AI workflow. The model proposes edits; never grants write or execution permissions. */
 (function (root, factory) {
-  const api = factory(typeof module === 'object' && module.exports ? require('./browser-core.js') : root.ArenaBrowserCore);
+  const api = factory(typeof module === 'object' && module.exports ? require('./browser-core.js') : root.ArenaBrowserCore, typeof module === 'object' && module.exports ? require('./project-index.js') : root.VynqodeProjectIndex);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.ArenaAIWorkflow = api;
-})(typeof globalThis === 'undefined' ? null : globalThis, function (core) {
+})(typeof globalThis === 'undefined' ? null : globalThis, function (core,index) {
   'use strict';
   if (!core) throw Error('Arena AI workflow requires browser project core');
   const WORDS = new Set(['the','and','with','that','this','from','for','add','make','file','code','new','app','project','into','when','please','change','update','src']);
   function terms(value) { return [...new Set(String(value).toLowerCase().match(/[a-z][a-z0-9_-]{2,}/g) || [])].filter(x => !WORDS.has(x)); }
   function rankFiles(project, task, current) {
-    const query = terms(task);
+    const query = terms(task),related=index?.related(project,current,task)||new Map();
     return Object.entries(project.files).map(([path, text]) => {
       const name = path.toLowerCase(), snippet = text.slice(0, 2500).toLowerCase();
-      let score = path === current ? 9 : 0;
+      let score = path === current ? 9 : 0;if(related.has(path))score+=related.get(path)===0?5:related.get(path)===1?8:4;
       if (name === 'index.html') score += 2;
       if (name === 'package.json' && /test|build|dependency|npm|package/.test(task.toLowerCase())) score += 7;
       if (query.some(term => name.includes(term))) score += 8;

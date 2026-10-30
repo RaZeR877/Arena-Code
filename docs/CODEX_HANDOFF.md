@@ -166,3 +166,10 @@ Version 0.15 RC has a user-authorized new signing identity stored outside Git. S
 ## Verified completion of the runtime/release follow-up
 
 The final code passed Node 20/22 CI, all five real Chromium workflows, signed release APK/AAB builds and signature checks. Native API 35 instrumentation passed at https://github.com/RaZeR877/Arena-Code/actions/runs/41045231521 (nonzero test enforcement enabled), covering recovery, snapshots, Monaco completion, native ZIP export/cancellation and preview-to-bridge isolation. Local software-emulator startup ANRs were distinguished from the successful accelerated run. PTY/debugger tools remain intentionally localhost Node features, not Android OS runtimes. Store upload, physical-device compatibility and actual model-solving performance remain separate validation scopes.
+
+
+## Android workflow development draft
+
+The `feat/android-complete-workflow` branch adds native Keystore credential configuration and bounded HTTP for optional AI providers, user-granted SAF folder import/save with conflict preflight and recovery, actual app-local Git history and native GitHub HTTPS transport, dependency-ranked project context, persistent edit reviews, text search and mobile editing controls, and a disposable QuickJS WASM worker. The test runtime exposes no browser/native/network/storage APIs; it does not provide Android Node/npm/PTY. Native `.git` trees and app-local Git remain separate.
+
+See [ANDROID_WORKFLOWS.md](ANDROID_WORKFLOWS.md) for usage, exact validation and remaining limits. Keep the existing signing identity; no release or publication is authorized for this draft. Do not confuse the old accelerated native gate with tests of these new native integrations. Native storage tests now cover Android Keystore encryption/AAD/removal and a test-only DocumentsProvider for folder conflict/writes. Those are distinct from fake provider format tests and Chromium tests with mocked native transport.

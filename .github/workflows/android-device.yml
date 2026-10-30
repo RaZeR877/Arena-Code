@@ -34,6 +34,8 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - run: npm ci --no-audit --no-fund
       - run: npm run android:sync
+      - name: Validate native provider and HTTP security contracts
+        run: android/gradlew -p android :app:testDebugUnitTest --no-daemon --max-workers=2
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35

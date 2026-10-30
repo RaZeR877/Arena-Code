@@ -1,14 +1,18 @@
+import './git-engine.js';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 window.VynqodeTerminal={Terminal,FitAddon};
 import { diffLines } from 'diff';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+const Device=registerPlugin('VynqodeDevice');
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 window.VynqodeDiff = (before,after)=>diffLines(before,after,{timeout:200,maxEditLength:2000});
 window.VynqodeNative = Object.freeze({
   available: Capacitor.isNativePlatform(),
+  ai:{providers:()=>Device.providers(),configure:provider=>Device.configure({provider}),clear:provider=>Device.clear({provider}),complete:request=>Device.complete({...request,approved:true})},
+  chooseFolder:()=>Device.chooseFolder(),reopenFolder:()=>Device.reopenFolder(),saveFolder:request=>Device.saveFolder(request),gitRequest:request=>Device.gitRequest(request),
   async exportZip(blob, name) {
     if (!Capacitor.isNativePlatform()) throw Error('Native export is unavailable in the browser');
     const bytes=new Uint8Array(await blob.arrayBuffer());

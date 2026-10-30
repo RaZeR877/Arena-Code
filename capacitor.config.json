@@ -10,5 +10,6 @@
     "allowMixedContent": false,
     "backgroundColor": "#191a1e",
     "minWebViewVersion": 120
-  }
+  },
+  "loggingBehavior": "none"
 }

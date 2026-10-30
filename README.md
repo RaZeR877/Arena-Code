@@ -36,7 +36,7 @@ The development branch adds a **Smart editor** toggle (bundled Monaco), **Projec
 
 ### Keyboard shortcuts
 
-`Ctrl/Cmd+S` saves; `Ctrl/Cmd+Enter` opens preview; `Tab` inserts two spaces in the editor.
+`Ctrl/Cmd+S` saves; `Ctrl/Cmd+Shift+F` searches project text; `Ctrl/Cmd+P` finds files; `Ctrl/Cmd+Enter` opens preview; `Tab` inserts two spaces in the editor.
 
 ### Test and build
 
@@ -49,6 +49,10 @@ npm run ci
 
 GitHub Pages is built exclusively from `public/index.html`, `public/ide.css`, `public/ide.js`, shared browser project/AI modules, and the model catalog. Legacy comparison scripts are **not loaded or published**.
 
+### Android workflow draft
+
+Native credential setup, folder access, offline Git, resumable reviewed edits and isolated JavaScript execution are described in [Android workflows](docs/ANDROID_WORKFLOWS.md). This local draft is separate from the previously published RC; native compilation and browser tests do not establish physical-device readiness. ₹0 remains the default; paid AI is optional.
+
 ### Naming/legal note
 
 The working name **Vynqode** was chosen after a preliminary web search revealed no obvious exact-name coding IDE conflict. This is not a formal trademark search or legal opinion. Before commercial launch, search the relevant national trademark registries (especially India), WIPO Global Brand Database, domain names, and app stores. Avoid other software products' trademarks, logos, and trade dress.
@@ -56,7 +60,7 @@ The working name **Vynqode** was chosen after a preliminary web search revealed 
 ### Security and limitations
 
 - This web editor is for small, text-focused projects (100 files, 3 MiB total, 400 KiB per file). Unsafe paths and obvious private-key filenames are rejected.
-- AI suggestions are checked for syntax when supported, show before/after code, and require explicit approval. Model output can still be incorrect or insecure; no runtime tests are performed in the browser edition.
+- AI suggestions are checked for syntax when supported, show before/after code, and require explicit approval. Model output can still be incorrect or insecure; the bundled QuickJS runtime can run bounded synchronous JavaScript/assert tests; it does not implement Node/npm.
 - HTML preview runs in an opaque-origin sandbox, but scripts can still make outbound requests. Do not paste secrets into previews or untrusted code.
 - Local browser data can be lost when storage is cleared. The one-step undo is not a version-control system.
 - Back-end Docker tools, hosted accounts, builds, terminals, and deployments require a separate server and are not available on GitHub Pages.

@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Installed only with the test APK. Never packaged into Vynqode. -->
+        <provider android:name="dev.vynqode.ide.nativebridge.FixtureDocumentsProvider"
+            android:authorities="dev.vynqode.ide.test.documents" android:exported="true"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>

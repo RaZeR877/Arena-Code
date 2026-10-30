@@ -15,6 +15,8 @@ Read [docs/CODEX_HANDOFF.md](docs/CODEX_HANDOFF.md) before undertaking substanti
 - `ide-runtime.cjs` and `public/runtime-tools.js` provide localhost-only PTY and integrated Node Inspector tools. Native PTY support is optional; never expose these routes in hosted/remote mode.
 - `public/workbench-layout.js` supplies responsive, accessible panel resizing. The active AI repair loop remains bounded and requires approval for every patch.
 - `android/`, `capacitor.config.json`, and `docs/ANDROID.md` define the native app. Signing keys and credentials belong outside the checkout; see `docs/RELEASE_SIGNING.md`.
+- Android workflow draft: `nativebridge/` provides native credential HTTP and SAF folders; `scripts/git-engine.js` bundles app-local Git; `scripts/playground-worker.js` confines code inside QuickJS WASM. Never eval project code in the host worker. See `docs/ANDROID_WORKFLOWS.md`.
+- `public/project-index.js` ranks dependencies/search; `public/workspace-ui.js` connects folder/Git/history/search controls. Library schema v2 preserves v1 snapshots; pending reviews require their matching checkpoint and fresh approval.
 - Historical app/hosted/runner code remains in the repo but is NOT automatically exposed by the focused IDE. Audit before reusing it.
 - `gh-pages` publishes the static browser-only edition. Static Pages cannot run Node.js, Docker, remote terminals, or a secure cloud API-key proxy.
 
@@ -32,7 +34,7 @@ Read [docs/CODEX_HANDOFF.md](docs/CODEX_HANDOFF.md) before undertaking substanti
 3. `npm run check:pages && npm run build:pages`
 4. Optional real browser test: `python3 test/pages-browser.py` (requires Python Playwright and Chromium)
 5. Test server-only provider behavior without leaking keys; test actual providers only with user-provided, non-committed credentials.
-6. Run `test/runtime-browser.py` and `test/repair-browser.py` for runtime/repair changes. Native checks require a ready Android emulator/device; require nonzero test results with `scripts/verify-android-results.py`.
+6. Run `test/android-workflow-browser.py` after building for QuickJS isolation/budgets, Git history, migration, stale review and folder-link guards (native transport is mocked). Run `test/runtime-browser.py` and `test/repair-browser.py` for runtime/repair changes. Native checks require a ready Android emulator/device; require nonzero test results with `scripts/verify-android-results.py`.
 7. Summarize precisely what passed, what was mocked, and what remains untested.
 
 ## Working style

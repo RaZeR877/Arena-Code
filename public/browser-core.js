@@ -8,7 +8,7 @@
   const encoder = new TextEncoder();
   const decoder = new TextDecoder('utf-8', { fatal: true });
   const MAX_FILES = 100, MAX_FILE_BYTES = 400 * 1024, MAX_TOTAL_BYTES = 3 * 1024 * 1024;
-  const forbidden = /(^|\/)(?:\.git|\.env(?:\..*)?|\.npmrc|node_modules|\.next|\.ssh|\.aws|\.cache|dist|build)(?:\/|$)|(?:^|\/)(?:id_rsa|id_ed25519|[^/]+\.(?:pem|p12|pfx|key))$/i;
+  const forbidden = /(^|\/)(?:\.git|\.env(?:\..*)?|\.npmrc|\.pypirc|\.netrc|\.git-credentials|node_modules|\.next|\.ssh|\.aws|\.cache|dist|build)(?:\/|$)|(?:^|\/)(?:id_rsa|id_ed25519|id_ecdsa|id_dsa|[^/]+\.(?:pem|p12|pfx|key|jks|keystore))$/i;
   function safePath(path) {
     if (typeof path !== 'string' || !path || path.length > 240 || path.includes('\\') || path.includes('\0') || path.startsWith('/') || /^[a-zA-Z]:/.test(path)) throw Error('Invalid project path');
     const parts = path.split('/');

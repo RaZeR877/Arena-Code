@@ -29,3 +29,6 @@ public/native-platform.css
 *.p12
 *.jks
 *.keystore
+
+public/playground-worker.js
+public/quickjs.wasm

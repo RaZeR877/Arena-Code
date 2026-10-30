@@ -11,6 +11,7 @@ on:
       - 'test/focused-*.py'
       - 'test/runtime-browser.py'
       - 'test/repair-browser.py'
+      - 'test/android-workflow-browser.py'
       - 'ide-runtime.cjs'
       - 'server.js'
       - 'test/pages-browser.py'
@@ -51,3 +52,6 @@ jobs:
         run: python test/runtime-browser.py
       - name: Validate bounded approved repair loop
         run: python test/repair-browser.py
+
+      - name: Validate isolated JavaScript, offline Git, project search and resumable reviews
+        run: python test/android-workflow-browser.py
