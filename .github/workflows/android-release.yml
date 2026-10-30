@@ -1,0 +1,50 @@
+name: Build signed Android release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VYNQODE_KEYSTORE_BASE64: ${{ secrets.VYNQODE_KEYSTORE_BASE64 }}
+      VYNQODE_KEYSTORE_PASSWORD: ${{ secrets.VYNQODE_KEYSTORE_PASSWORD }}
+      VYNQODE_KEY_ALIAS: ${{ secrets.VYNQODE_KEY_ALIAS }}
+      VYNQODE_KEY_PASSWORD: ${{ secrets.VYNQODE_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Restore signing key outside checkout
+        shell: python
+        run: |
+          import base64, os, pathlib
+          names=['VYNQODE_KEYSTORE_BASE64','VYNQODE_KEYSTORE_PASSWORD','VYNQODE_KEY_ALIAS','VYNQODE_KEY_PASSWORD']
+          missing=[name for name in names if not os.environ.get(name)]
+          if missing: raise SystemExit('Configure repository secrets first: '+', '.join(missing))
+          path=pathlib.Path(os.environ['RUNNER_TEMP'])/'vynqode-release.p12'
+          path.write_bytes(base64.b64decode(os.environ['VYNQODE_KEYSTORE_BASE64'],validate=True))
+          path.chmod(0o600)
+          with open(os.environ['GITHUB_ENV'],'a') as output: output.write('VYNQODE_KEYSTORE_PATH='+str(path)+'\n')
+      - run: npm ci --no-audit --no-fund
+      - run: npm run ci
+      - run: npm run android:release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vynqode-signed-release
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+      - name: Remove temporary key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/vynqode-release.p12"

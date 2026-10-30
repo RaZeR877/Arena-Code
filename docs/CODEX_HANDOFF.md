@@ -154,3 +154,10 @@ The modern workspace styling uses charcoal panels and warm accents, compact chro
 ## Android/editor foundations
 
 See [ANDROID.md](ANDROID.md). The active IDE now has an optional bundled Monaco surface, draft recovery, IndexedDB project snapshots, actual line-level AI diffs and visible syntax/context evidence. Its Tests dialog runs approved browser-project snapshots through the existing localhost Node runner and can place actual failure output into a repair prompt. This is user-controlled, not an autonomous repair benchmark. Capacitor supplies an Android debug APK build path and native ZIP sharing. Native device behavior remains unverified; a terminal, Android Node execution and integrated debugger remain unfinished. Browser and Android builds require `npm ci` for bundled assets. Root dependencies are locked. `evaluation/validate-fixtures.cjs` explicitly selects TAP to avoid Node reporter drift.
+
+
+## Runtime, repair and release candidate follow-up
+
+The active focused IDE now contains a real localhost PTY terminal with execution-copy export/import and a Node Inspector debugger with breakpoints, stepping, call stack and local values. Strict same-origin/loopback guards protect runtime APIs; server credentials are excluded from terminal child environments. Explorer/assistant panels support pointer and keyboard resizing. The repair loop saves recovery state, runs actual tests, requires approval for each patch, protects test contracts, limits corrections, and discards cancelled or stale results (including equal-revision project switches). Mechanism tests use mocked model responses, not a real-model capability benchmark.
+
+Version 0.15 RC has a user-authorized new signing identity stored outside Git. Signed APK and AAB builds and their signatures were verified. See RELEASE_SIGNING.md for custody and backup; never replace that identity on a routine update. Native instrumentation is a separate gate from compilation/signing, and its current run results must be checked before claiming device readiness. The Android native workflow checks for nonzero executed tests.

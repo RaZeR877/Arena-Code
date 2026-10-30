@@ -6,8 +6,8 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const out = path.join(root, 'dist', 'pages');
 const files = [
-  ['public/index.html','index.html'],['public/ide.css','ide.css'],['public/workbench.css','workbench.css'],['public/ide.js','ide.js'],
-  ['public/project-library.js','project-library.js'],['public/smart-editor.js','smart-editor.js'],['public/favicon.svg','favicon.svg'],['public/model-catalog.js','model-catalog.js'],['public/cloud-bridge.js','cloud-bridge.js'],
+  ['public/webview-required.html','webview-required.html'],['public/index.html','index.html'],['public/ide.css','ide.css'],['public/workbench.css','workbench.css'],['public/ide.js','ide.js'],
+  ['public/workbench-layout.js','workbench-layout.js'],['public/runtime-tools.js','runtime-tools.js'],['public/project-library.js','project-library.js'],['public/smart-editor.js','smart-editor.js'],['public/favicon.svg','favicon.svg'],['public/model-catalog.js','model-catalog.js'],['public/cloud-bridge.js','cloud-bridge.js'],
   ['pages/browser-core.js','browser-core.js'],['pages/ai-workflow.js','ai-workflow.js']
 ];
 fs.rmSync(out, { recursive:true, force:true });

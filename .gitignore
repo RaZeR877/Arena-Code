@@ -24,3 +24,8 @@ dist/
 
 # Generated Capacitor browser bridge
 public/native-platform.js
+public/native-platform.css
+# Release-signing material must never enter source control.
+*.p12
+*.jks
+*.keystore

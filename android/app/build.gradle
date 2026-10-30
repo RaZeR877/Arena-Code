@@ -7,8 +7,8 @@ android {
         applicationId "dev.vynqode.ide"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "0.15.0-dev"
+        versionCode 2
+        versionName "0.15.0-rc1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    def signingNames = ['VYNQODE_KEYSTORE_PATH', 'VYNQODE_KEYSTORE_PASSWORD', 'VYNQODE_KEY_ALIAS', 'VYNQODE_KEY_PASSWORD']
+    def signingReady = signingNames.every { System.getenv(it) }
+    signingConfigs {
+        if (signingReady) {
+            release {
+                storeFile file(System.getenv('VYNQODE_KEYSTORE_PATH'))
+                storePassword System.getenv('VYNQODE_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('VYNQODE_KEY_ALIAS')
+                keyPassword System.getenv('VYNQODE_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (signingReady) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

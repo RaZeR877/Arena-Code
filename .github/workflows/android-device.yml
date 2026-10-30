@@ -1,0 +1,48 @@
+name: Android native workflow tests
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'feat/finish-runtime-release']
+    paths: ['android/**', 'public/**', 'scripts/**', 'capacitor.config.json', 'package*.json', '.github/workflows/android-device.yml']
+permissions:
+  contents: read
+jobs:
+  device:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Enable runner KVM access
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run android:sync
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            set -e
+            cd android
+            ./gradlew :app:connectedDebugAndroidTest --no-daemon --max-workers=2
+            python3 ../scripts/verify-android-results.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-test-results
+          path: |
+            android/app/build/reports/androidTests/
+            android/app/build/outputs/androidTest-results/
+          if-no-files-found: warn

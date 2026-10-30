@@ -40,3 +40,15 @@ This is a debug build, signed with a development key, not a store-ready release.
 ## Validation recorded for this development milestone
 
 The local debug Gradle build completed, APK signature verification succeeded, and the APK archive contains the required IDE, Monaco and project-library assets. Node 22 CI passed: 14 Pages checks, 39 integration/configuration tests, five intentional red fixture baselines and evaluation dry run. Three actual Chromium HTTP workflows passed: the main IDE smoke; Monaco/completion and storage recovery; and approved local Node execution with a real failing assertion followed by one passing test after a manual source correction. The fixture validator also passed under Node 24 after explicitly selecting TAP. Native sharing and Android runtime behavior were not exercised on a device or emulator.
+
+## Runtime and repair follow-up
+
+The focused localhost IDE now has **Tools** with a real PTY terminal and an integrated Node Inspector debugger (breakpoint line, pause/resume, stepping, stack and locals). They use an approved execution copy. Import its files explicitly to change the browser project; import is rejected if the browser project diverged. Sessions are local-only, same-origin, limited to three, capped at 256 KiB output each and expired after 15 minutes idle. Terminal child environments exclude the server's API credentials. This remains trusted host execution, not sandboxing. PTY support is an optional native dependency; hosts without its compiler/prebuild can still use the rest of the IDE.
+
+**AI repair loop** runs tests and proposes at most two corrections. Each patch requires explicit approval, protected tests/package.json cannot be edited, a recovery snapshot is saved first, and a cancelled in-flight model result is discarded. Model calls can be billed by the selected provider. Tests here use mocked model responses and actual Node execution; they are not real-model quality benchmarks.
+
+Explorer and assistant widths support pointer/keyboard resizing on desktop with clamped saved preferences. Separators are hidden on mobile. Project import/export actions are also available inside Projects on phones.
+
+Run `npm run android:device-test` with a ready Android device/emulator and current WebView. The app-specific instrumentation tests editing/draft recovery, IndexedDB snapshots, preview bridge isolation, actual native ZIP creation and share-sheet cancellation. The manual **Android native workflow tests** action supplies a hardware-accelerated API 35 emulator once merged. Compilation is distinct from running this test; consult the recorded current-session result before claiming native behavior works.
+
+See [RELEASE_SIGNING.md](RELEASE_SIGNING.md) for the newly configured signing identity and signed APK/AAB builds. Signing credentials remain outside Git.

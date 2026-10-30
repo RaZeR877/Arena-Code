@@ -9,6 +9,9 @@ on:
       - 'scripts/**'
       - 'package*.json'
       - 'test/focused-*.py'
+      - 'test/runtime-browser.py'
+      - 'test/repair-browser.py'
+      - 'ide-runtime.cjs'
       - 'server.js'
       - 'test/pages-browser.py'
       - 'test/browser-project.test.cjs'
@@ -44,3 +47,7 @@ jobs:
         run: python test/focused-browser.py
       - name: Validate approved Node tests and repair context
         run: python test/focused-runner-browser.py
+      - name: Validate actual PTY and debugger UI
+        run: python test/runtime-browser.py
+      - name: Validate bounded approved repair loop
+        run: python test/repair-browser.py

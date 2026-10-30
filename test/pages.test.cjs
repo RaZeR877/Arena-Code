@@ -10,7 +10,7 @@ test('Vynqode Pages build is self-contained, safe for project subpaths, and excl
   assert.equal(proc.status,0,proc.stderr);
   const dir=path.join(root,'dist/pages');
   const files=fs.readdirSync(dir).sort();
-  assert.deepEqual(files,['.nojekyll','ai-workflow.js','browser-core.js','cloud-bridge.js','favicon.svg','ide.css','ide.js','index.html','model-catalog.js','robots.txt','native-platform.js','project-library.js','smart-editor.js','vendor','workbench.css'].sort());
+  assert.deepEqual(files,['.nojekyll','ai-workflow.js','browser-core.js','cloud-bridge.js','favicon.svg','ide.css','ide.js','index.html','model-catalog.js','robots.txt','native-platform.js','native-platform.css','runtime-tools.js','workbench-layout.js','project-library.js','smart-editor.js','vendor','webview-required.html','workbench.css'].sort());
   const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
   assert.match(html,/Vynqode/);
   assert.match(html,/src="\.\/ide\.js"/);

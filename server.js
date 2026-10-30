@@ -254,7 +254,9 @@ function requireLocalHost(req, res) {
   } catch {}
   json(res, 403, { error: 'Cross-origin API requests are not allowed.' }); return false;
 }
+const ideRuntime=require('./ide-runtime.cjs').createRuntime({host:HOST,projectDir,resolveFile:(id,p)=>resolveProjectPath(id,p).full,readBody,json});
 async function handleApi(req, res, url) {
+  if(await ideRuntime.handle(req,res,url))return true;
   if (!requireLocalHost(req, res)) return true;
   if (url.pathname === '/api/status' && req.method === 'GET') {
     json(res, 200, { demo: !API_KEY, providerConfigured: Boolean(API_KEY), executionBackend: EXECUTION_BACKEND,
@@ -981,4 +983,4 @@ function startServer() {
 }
 if (HOSTED_MODE) hostedApp.init().then(startServer).catch(error => { console.error(`Could not initialize hosted database: ${error.message}`); process.exit(1); });
 else startServer();
-for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { for (const entry of managedProcesses.values()) terminateManagedProcess(entry); server.close(() => { if (hostedApp) hostedApp.close().finally(() => process.exit(0)); else process.exit(0); }); setTimeout(() => process.exit(0), 1800).unref(); });
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { ideRuntime.dispose(); for (const entry of managedProcesses.values()) terminateManagedProcess(entry); server.close(() => { if (hostedApp) hostedApp.close().finally(() => process.exit(0)); else process.exit(0); }); setTimeout(() => process.exit(0), 1800).unref(); });

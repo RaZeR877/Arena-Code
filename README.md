@@ -1,3 +1,7 @@
+# Vynqode 0.15 release candidate
+
+The focused IDE now offers a real localhost terminal and Node debugger under **Tools**, resizable panels, and a bounded **AI repair loop** with reviewed patches and actual test feedback. Browser projects and runtime copies are reconciled explicitly. Android bundles the editor/project workflow; it does not run desktop Node or PTY processes. Signed APK/AAB builds, native test commands and signing backup instructions are documented in [Android setup](docs/ANDROID.md) and [release signing](docs/RELEASE_SIGNING.md). No paid provider or store publication is required.
+
 ## Android and editor development preview
 
 The development branch adds a **Smart editor** toggle (bundled Monaco), **Projects** snapshots, unsaved-draft recovery, line-level AI reviews and approved localhost Node tests. Build a debug Android APK with `npm ci` then `npm run android:debug` after installing JDK 21 and Android SDK 35. See [Android setup and limitations](docs/ANDROID.md). Android does not bundle a Node runtime or securely expose desktop provider credentials. Device testing and release signing remain separate requirements.

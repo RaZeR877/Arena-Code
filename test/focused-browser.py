@@ -17,6 +17,7 @@ try:
   page.goto(f'http://127.0.0.1:{server.server_port}/')
   page.locator('#codeEditor').fill('<html><body>Recovered draft</body></html>')
   page.wait_for_function("localStorage.getItem('vynqode-editor-draft-v1') !== null")
+  assert page.evaluate("JSON.parse(localStorage.getItem('vynqode-editor-draft-v1')).base.length<300")
   page.reload()
   assert page.locator('#codeEditor').input_value()=='<html><body>Recovered draft</body></html>'
   assert 'Recovered unsaved draft' in page.locator('#statusMessage').inner_text()

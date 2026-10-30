@@ -12,6 +12,9 @@ Read [docs/CODEX_HANDOFF.md](docs/CODEX_HANDOFF.md) before undertaking substanti
 - The canonical focused IDE is in `public/index.html`, `public/ide.js`, `public/ide.css`, and `public/workbench.css` with supporting `public/browser-core.js`, `public/ai-workflow.js`, `public/model-catalog.js`, and `public/cloud-bridge.js`.
 - `scripts/build-pages.cjs` builds `dist/pages` for the static GitHub Pages edition.
 - `server.js` and `ai-providers.cjs` implement localhost-only API provider features. See `docs/API_PROVIDERS.md`.
+- `ide-runtime.cjs` and `public/runtime-tools.js` provide localhost-only PTY and integrated Node Inspector tools. Native PTY support is optional; never expose these routes in hosted/remote mode.
+- `public/workbench-layout.js` supplies responsive, accessible panel resizing. The active AI repair loop remains bounded and requires approval for every patch.
+- `android/`, `capacitor.config.json`, and `docs/ANDROID.md` define the native app. Signing keys and credentials belong outside the checkout; see `docs/RELEASE_SIGNING.md`.
 - Historical app/hosted/runner code remains in the repo but is NOT automatically exposed by the focused IDE. Audit before reusing it.
 - `gh-pages` publishes the static browser-only edition. Static Pages cannot run Node.js, Docker, remote terminals, or a secure cloud API-key proxy.
 
@@ -24,12 +27,13 @@ Read [docs/CODEX_HANDOFF.md](docs/CODEX_HANDOFF.md) before undertaking substanti
 - Do not silently introduce subscription costs or depend on paid services.
 
 ## Validation
-1. `npm install` (Node 20+)
+1. `npm ci` (Node 22 recommended; PTY native builds may require a C++ toolchain)
 2. `npm run ci` (syntax, integration and evaluation dry-run)
 3. `npm run check:pages && npm run build:pages`
 4. Optional real browser test: `python3 test/pages-browser.py` (requires Python Playwright and Chromium)
 5. Test server-only provider behavior without leaking keys; test actual providers only with user-provided, non-committed credentials.
-6. Summarize precisely what passed, what was mocked, and what remains untested.
+6. Run `test/runtime-browser.py` and `test/repair-browser.py` for runtime/repair changes. Native checks require a ready Android emulator/device; require nonzero test results with `scripts/verify-android-results.py`.
+7. Summarize precisely what passed, what was mocked, and what remains untested.
 
 ## Working style
 - Start with a short inspection/plan, implement actual code, run tests, and explain meaningful changes. Prefer a complete functioning vertical slice over accumulating unverified feature flags.
