@@ -43,10 +43,12 @@ public class NativeWorkflowTest {
             try {
                 js(scenario,"Vynqode.openProject({name:'Android instrumentation',files:{'index.html':'<html><body>Native workflow</body></html>','app.js':'const original=1;'}},'Native test');document.getElementById('codeEditor').value='<html><body>Recovered native draft</body></html>';document.getElementById('codeEditor').dispatchEvent(new Event('input'));true");
                 until(scenario,"Boolean(localStorage.getItem('vynqode-editor-draft-v1'))");
+                js(scenario,"window.__oldDocument=true;true");
                 scenario.onActivity(activity -> activity.getBridge().getWebView().reload());
-                until(scenario,"Boolean(window.Vynqode && document.getElementById('codeEditor').value.includes('Recovered native draft'))");
-                js(scenario,"document.getElementById('saveFile').click();window.__saved=false;VynqodeLibrary.save(Vynqode.getProject()).then(id=>{window.__snapshotId=id;window.__saved=true;});true");
-                until(scenario,"window.__saved===true");
+                until(scenario,"Boolean(window.Vynqode && !window.__oldDocument && document.getElementById('codeEditor').value.includes('Recovered native draft'))");
+                js(scenario,"document.getElementById('saveFile').click();window.__saved=false;window.__saveError=null;VynqodeLibrary.save(Vynqode.getProject()).then(id=>{window.__snapshotId=id;window.__saved=true;}).catch(error=>window.__saveError=String(error.stack||error));true");
+                until(scenario,"window.__saved===true||Boolean(window.__saveError)");
+                assertEquals("Native snapshot storage error: "+js(scenario,"window.__saveError"),"null",js(scenario,"window.__saveError"));
                 js(scenario,"window.__snapshotVerified=false;VynqodeLibrary.list().then(rows=>{window.__snapshotVerified=rows.some(r=>r.id===window.__snapshotId&&r.project.files['index.html'].includes('Recovered native draft'));});true");
                 until(scenario,"window.__snapshotVerified===true");
                 // Exercise bundled Monaco and its real language worker inside Android WebView.

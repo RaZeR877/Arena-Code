@@ -20,6 +20,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/cache/restore@v4
+        id: gradle-cache
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: native-gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle', 'android/gradle/wrapper/gradle-wrapper.properties', 'package-lock.json') }}
       - name: Enable runner KVM access
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -34,6 +41,13 @@ jobs:
           arch: x86_64
           disable-animations: true
           script: android/gradlew -p android :app:connectedDebugAndroidTest --no-daemon --max-workers=2 && python3 scripts/verify-android-results.py
+      - uses: actions/cache/save@v4
+        if: always() && steps.gradle-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.gradle-cache.outputs.cache-primary-key }}
       - name: Surface native test failures
         if: failure()
         shell: python
