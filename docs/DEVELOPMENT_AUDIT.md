@@ -35,3 +35,8 @@ Tabs and cursor state are session-local and are not added to the persisted proje
 ## Follow-up: editor and Android foundation
 
 The active UI now integrates optional bundled Monaco, an IndexedDB project/snapshot library, draft recovery, line-level AI diffs with context/syntax evidence, and approved Node tests with failure output that can populate a repair prompt. Android debug packaging and native ZIP sharing are added; see ANDROID.md for build steps and unverified device behavior. A parity regression test guards the still-duplicated browser core/AI modules, and the root dependency lockfile is committed. The fixture validator now requests TAP explicitly. The original audit table describes findings at its baseline commit; full autonomous repair, PTY terminal, debugger integration, real inference and native device validation remain unfinished.
+
+
+## Runtime/release completion — 2026-10-30
+
+The previously unfinished local PTY, integrated Node debugger, panel resizing and supervised test/repair loop are now implemented and exercised through the active UI. The repair tests include cancellation, protected contracts, strict attempt bounds and project switches with colliding revision numbers. Signed APK/AAB artifacts and the user-authorized external signing identity are prepared. Native API 35 tests passed: https://github.com/RaZeR877/Arena-Code/actions/runs/41045231521. This does not claim an Android Node runtime, a production security audit, real-model benchmark scores, physical-device coverage or store publication.

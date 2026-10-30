@@ -31,7 +31,7 @@ Output: `android/app/build/outputs/apk/debug/app-debug.apk`. Install on a test d
 
 Preview documents remain opaque-origin sandboxed iframes. The activity removes JavaScriptInterface fallbacks (which otherwise expose methods to subframes), retaining the modern origin-scoped main-frame Capacitor message listener. Legacy WebViews fail closed for native operations. HTTP/cookie native interception is unused. File sharing is restricted to the app's export-cache directory. Cleartext/mixed content and arbitrary navigation allowlists are not enabled.
 
-This configuration compiled successfully, but native bridge isolation, sharing, file-picker handling, keyboard behavior and lifecycle recovery still require device/emulator testing. Browser tests alone do not establish Android runtime safety or usability.
+The API 35 native instrumentation workflow now passes editing/draft recovery, IndexedDB snapshots, bundled Monaco/language-worker completion, opaque-preview bridge isolation, native ZIP creation and share-sheet cancellation. This is an emulator result, not a full security audit or a physical-device/IME/file-picker compatibility matrix.
 
 ## Release
 
@@ -39,7 +39,7 @@ This is a debug build, signed with a development key, not a store-ready release.
 
 ## Validation recorded for this development milestone
 
-The local debug Gradle build completed, APK signature verification succeeded, and the APK archive contains the required IDE, Monaco and project-library assets. Node 22 CI passed: 14 Pages checks, 39 integration/configuration tests, five intentional red fixture baselines and evaluation dry run. Three actual Chromium HTTP workflows passed: the main IDE smoke; Monaco/completion and storage recovery; and approved local Node execution with a real failing assertion followed by one passing test after a manual source correction. The fixture validator also passed under Node 24 after explicitly selecting TAP. Native sharing and Android runtime behavior were not exercised on a device or emulator.
+The local debug Gradle build completed, APK signature verification succeeded, and the APK archive contains the required IDE, Monaco and project-library assets. Node 22 CI passed: 14 Pages checks, 39 integration/configuration tests, five intentional red fixture baselines and evaluation dry run. Three actual Chromium HTTP workflows passed: the main IDE smoke; Monaco/completion and storage recovery; and approved local Node execution with a real failing assertion followed by one passing test after a manual source correction. The fixture validator also passed under Node 24 after explicitly selecting TAP. Native checks were unrun at that initial foundation milestone; the completed API 35 run below supersedes that limitation.
 
 ## Runtime and repair follow-up
 
@@ -52,3 +52,10 @@ Explorer and assistant widths support pointer/keyboard resizing on desktop with 
 Run `npm run android:device-test` with a ready Android device/emulator and current WebView. The app-specific instrumentation tests editing/draft recovery, IndexedDB snapshots, preview bridge isolation, actual native ZIP creation and share-sheet cancellation. The manual **Android native workflow tests** action supplies a hardware-accelerated API 35 emulator once merged. Compilation is distinct from running this test; consult the recorded current-session result before claiming native behavior works.
 
 See [RELEASE_SIGNING.md](RELEASE_SIGNING.md) for the newly configured signing identity and signed APK/AAB builds. Signing credentials remain outside Git.
+
+
+## Completed native gate — 2026-10-30
+
+[API 35 native workflow succeeded](https://github.com/RaZeR877/Arena-Code/actions/runs/41045231521) for the corrected instrumentation on commit 865b1ee. The workflow requires nonzero successful JUnit results, so compilation or an empty run cannot pass this gate. The test exercises actual Android WebView/Capacitor storage and export plugins, including cancellation and preview bridge separation. A reload-readiness race in the test was corrected by waiting for a new document, without removing assertions. Local software emulation produced process-start ANRs; the recorded passing gate uses KVM on a public Ubuntu 24.04 runner.
+
+The release APK and AAB signatures were verified. Signing credentials were scanned against tracked files and both archives and were absent. The signing identity and its private backup remain outside the checkout. Store publication, physical-device coverage, and real-model benchmarks are not claimed.
