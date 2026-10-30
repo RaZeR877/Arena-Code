@@ -1,0 +1,36 @@
+name: Publish verified Vynqode release
+on:
+  push:
+    branches: ['release/v0.15.0-rc.1']
+    paths: ['release-assets/**', '.github/workflows/publish-release.yml']
+permissions:
+  contents: write
+concurrency:
+  group: publish-vynqode-v0.15.0-rc.1
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify public release assets
+        working-directory: release-assets
+        run: |
+          sha256sum -c Vynqode-0.15.0-rc1-release.apk.sha256
+          sha256sum -c Vynqode-0.15.0-rc1-release.aab.sha256
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          allowed={'Vynqode-0.15.0-rc1-release.apk','Vynqode-0.15.0-rc1-release.aab','Vynqode-0.15.0-rc1-release.apk.sha256','Vynqode-0.15.0-rc1-release.aab.sha256','RELEASE_NOTES.md'}
+          assert {p.name for p in Path('.').iterdir()}==allowed
+          for suffix in ['apk','aab']:
+            with zipfile.ZipFile('Vynqode-0.15.0-rc1-release.'+suffix) as archive:
+              assert not any(name.endswith(('.p12','.jks','.keystore','.env','signing.json')) for name in archive.namelist())
+          PY
+      - name: Publish prerelease and verified binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create v0.15.0-rc.1 --verify-tag --prerelease --title 'Vynqode IDE 0.15.0 RC1' --notes-file release-assets/RELEASE_NOTES.md release-assets/Vynqode-0.15.0-rc1-release.apk release-assets/Vynqode-0.15.0-rc1-release.aab release-assets/Vynqode-0.15.0-rc1-release.apk.sha256 release-assets/Vynqode-0.15.0-rc1-release.aab.sha256
