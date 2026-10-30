@@ -26,14 +26,36 @@ try:
       page.close();page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.on('dialog',lambda d:d.accept())
       page.set_content((ROOT/'index.html').read_text(),wait_until='domcontentloaded')
       page.evaluate("""() => { const m=new Map();Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k)}}) }""")
-      for asset in ['browser-core.js','model-catalog.js','ai-workflow.js','ide.js']:
+      for asset in ['browser-core.js','model-catalog.js','ai-workflow.js','cloud-bridge.js','ide.js']:
         page.add_script_tag(content=(ROOT/asset).read_text())
       page.add_style_tag(content=(ROOT/'ide.css').read_text())
       print('Vynqode browser smoke using inline fallback')
     assert page.title()=='Vynqode — AI Coding IDE'
     assert page.locator('#fileList .file-row').count()==3
     assert page.locator('#assistantPanel').is_visible()
+    desktop=ROOT.parents[1]/'test-results'/'vynqode-v013-desktop.png'
+    desktop.parent.mkdir(exist_ok=True,parents=True)
+    page.screenshot(path=str(desktop),full_page=False)
     assert page.locator('text=Battle').count()==0
+    # All cloud providers are visible, but the public static site never accepts raw API keys.
+    page.locator('#configureModel').click()
+    page.locator('#apiEngineTab').click()
+    assert page.locator('#apiProvider option').count()==8
+    assert page.locator('#modelDialog input[type=password]').count()==0
+    page.locator('#apiConnectionStatus').wait_for(timeout=5000)
+    assert page.locator('#connectApi').is_disabled()
+    page.locator('#modelDialog [data-close-modal]').click()
+    # Functional quick-open, file filtering, and simultaneous editor/preview.
+    page.locator('#quickOpen').click()
+    page.locator('#quickFileInput').fill('style')
+    page.locator('#quickFileResults button').first.click()
+    assert 'style.css' in page.locator('#fileBadge').inner_text()
+    page.locator('#fileSearch').fill('app')
+    assert page.locator('#fileList .file-row:visible').count()==1
+    page.locator('#fileSearch').fill('')
+    page.locator('#splitTab').click()
+    assert page.locator('#editorSurface').is_visible() and page.locator('#previewSurface').is_visible()
+    page.locator('#editorTab').click()
     page.locator('[data-file="app.js"]').click()
     page.locator('#codeEditor').fill('const broken = ;')
     page.locator('#saveFile').click()

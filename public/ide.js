@@ -6,10 +6,11 @@
   const core = window.ArenaBrowserCore;
   const workflow = window.ArenaAIWorkflow;
   const catalog = window.ArenaModelCatalog;
+  const cloud = window.VynqodeCloud;
   if (!core || !workflow || !catalog) throw Error('Vynqode project and AI modules are missing');
   const KEY = 'vynqode-project-v1', BACKUP = 'vynqode-undo-v1', LEGACY = 'arena-pages-workspace-v1';
   const $ = id => document.getElementById(id);
-  const state = { project:null, current:'index.html', dirty:false, view:'editor', busy:false, engine:null, model:null, module:null, models:[], proposal:null, frameNonce:null, source:'browser', mobileSection:'editor' };
+  const state = { project:null, current:'index.html', dirty:false, view:'editor', busy:false, engine:null, model:null, module:null, models:[], proposal:null, frameNonce:null, source:'browser', mobileSection:'editor', providers:[], engineMode:'local' };
   const enc = val => String(val ?? '');
   const sleep = n => new Promise(r => setTimeout(r, n));
   function note(message, error=false) { $('statusMessage').textContent=enc(message); $('statusMessage').dataset.error=String(error); }
@@ -66,6 +67,9 @@
       const icon=document.createElement('span');icon.className='file-icon';icon.textContent=pathIcon(path);
       const label=document.createElement('span');label.textContent=path;label.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap';btn.append(icon,label);list.append(btn);
     }
+    $('statusFileCount').textContent=Object.keys(state.project.files).length+' files';
+    $('statusLanguage').textContent=state.current?.split('.').pop()?.toUpperCase()||'TEXT';
+    const query=$('fileSearch').value.toLowerCase().trim();for(const row of list.children)row.hidden=!!query&&!row.dataset.file.toLowerCase().includes(query);
     $('codeEditor').disabled=!state.current;
     $('codeEditor').value=state.current?state.project.files[state.current]:'';
     $('fileBadge').textContent=state.current||'No file';
@@ -101,7 +105,15 @@
     $('diagnosticsCount').textContent=`${bad.length} errors · ${checks.length} files`;$('diagnosticsPanel').open=true;
     note(bad.length?bad.length+' syntax issues found':'Syntax checks complete. Browser preview is not a build/test runner.',bad.length>0);
   }
-  function setView(view){state.view=view;const isPreview=view==='preview';$('editorSurface').classList.toggle('hidden',isPreview);$('previewSurface').classList.toggle('hidden',!isPreview);$('editorTab').classList.toggle('active',!isPreview);$('previewTab').classList.toggle('active',isPreview);$('editorTab').setAttribute('aria-selected',String(!isPreview));$('previewTab').setAttribute('aria-selected',String(isPreview));}
+  function setView(view){
+    state.view=view;const isPreview=view==='preview',isSplit=view==='split';
+    $('editorPanel').classList.toggle('split-mode',isSplit);
+    $('editorSurface').classList.toggle('hidden',isPreview);
+    $('previewSurface').classList.toggle('hidden',view==='editor');
+    for(const [tab,value] of [['editorTab','editor'],['previewTab','preview'],['splitTab','split']]){
+      $(tab).classList.toggle('active',view===value);$(tab).setAttribute('aria-selected',String(view===value));
+    }
+  }
   function resolveAsset(target,base) {if(!target||/^(?:https?:|data:|blob:|\/\/|\/|#)/i.test(target))return null;const stack=base.split('/').slice(0,-1);for(const part of target.split('/')){if(!part||part==='.')continue;if(part==='..'){if(!stack.length)return null;stack.pop();}else stack.push(part);}try{return core.safePath(stack.join('/'));}catch{return null;}}
   function preview(){if(state.dirty&&!saveOpen())return;const paths=Object.keys(state.project.files);const source=(state.current&&/\.html?$/i.test(state.current)?state.current:paths.find(x=>x==='index.html')||paths.find(x=>/\.html?$/i.test(x)));
     if(!source){note('Add an HTML file to preview. Server-side frameworks require the Node runner.',true);return;}
@@ -110,11 +122,75 @@
     for(const js of [...doc.querySelectorAll('script[src]')]){const path=resolveAsset(js.getAttribute('src'),source);if(path&&Object.hasOwn(state.project.files,path)&&js.type!=='module'){const inline=doc.createElement('script');inline.textContent=state.project.files[path];js.replaceWith(inline);}}
     const token=Math.random().toString(36).slice(2)+Date.now();state.frameNonce=token;
     const bridge=doc.createElement('script');bridge.textContent=`(()=>{const token=${JSON.stringify(token)};for(const name of ['log','warn','error']){const old=console[name];console[name]=(...values)=>{try{parent.postMessage({vynqodePreview:true,token,level:name,message:values.map(String).join(' ').slice(0,600)},'*')}catch{};old.apply(console,values)}}addEventListener('error',e=>parent.postMessage({vynqodePreview:true,token,level:'error',message:String(e.message).slice(0,600)},'*'))})();`;
-    doc.head.prepend(bridge);$('previewFrame').srcdoc='<!doctype html>\n'+doc.documentElement.outerHTML;setView('preview');note('Previewing '+source+' · HTML/CSS/classic JS only');
+    doc.head.prepend(bridge);$('previewFrame').srcdoc='<!doctype html>\n'+doc.documentElement.outerHTML;if(state.view!=='split')setView('preview');note('Previewing '+source+' · HTML/CSS/classic JS only');
   }
   function showModal(id){$(id).showModal();}function hideModal(id){$(id).close();}
   function chatBubble(message,author){const log=$('chatLog');log.querySelector('.welcome')?.remove();const div=document.createElement('div');div.className='bubble '+author;if(author==='ai'){const label=document.createElement('strong');label.textContent='Vynqode AI';div.append(label);}const p=document.createElement('span');p.textContent=message;div.append(p);log.append(div);log.scrollTop=log.scrollHeight;return div;}
   function modelProgress(message,value){$('modelStatus').textContent=message;if(value!==undefined)$('modelProgress').style.width=Math.max(0,Math.min(100,Math.round(value*100)))+'%';}
+  // The static Pages build never asks for or persists API keys. The same-origin
+  // Node server exposes only configured provider names and a bounded proxy.
+  const publicOptions=[
+    ['openai','OpenAI (ChatGPT API)'],['anthropic','Anthropic Claude'],['gemini','Google Gemini'],
+    ['openrouter','OpenRouter'],['groq','Groq'],['deepseek','DeepSeek'],
+    ['ollama','Ollama (local)'],['custom','Custom OpenAI-compatible']
+  ];
+  function switchEngineTab(name){
+    state.engineMode=name;
+    $('localEngineSettings').classList.toggle('hidden',name!=='local');
+    $('apiEngineSettings').classList.toggle('hidden',name!=='api');
+    $('localEngineTab').classList.toggle('active',name==='local');$('apiEngineTab').classList.toggle('active',name==='api');
+    $('localEngineTab').setAttribute('aria-selected',String(name==='local'));
+    $('apiEngineTab').setAttribute('aria-selected',String(name==='api'));
+    if(name==='api')refreshProviders();
+  }
+  async function refreshProviders(){
+    $('refreshProviders').disabled=true;$('connectApi').disabled=true;
+    try{
+      const providers=await cloud.discover();state.providers=providers;
+      const chosen=$('apiProvider').value;
+      $('apiProvider').textContent='';
+      for(const [id,name] of publicOptions){
+        const record=providers.find(p=>p.id===id);
+        const option=document.createElement('option');option.value=id;
+        option.textContent=name+(record?.configured?' · ready':' · setup required');
+        $('apiProvider').append(option);
+      }
+      $('apiProvider').value=chosen||'openai';
+      syncApiModel();
+    }catch(e){
+      state.providers=[];$('apiModel').textContent='';$('apiConnectionStatus').textContent=e.message+' Keys must never be placed in this public website.';
+      $('connectApi').disabled=true;
+    }finally{$('refreshProviders').disabled=false;}
+  }
+  function syncApiModel(){
+    const id=$('apiProvider').value,provider=state.providers.find(p=>p.id===id);
+    $('apiModel').textContent='';
+    for(const model of provider?.models||[]){const o=document.createElement('option');o.value=model;o.textContent=model;$('apiModel').append(o);}
+    $('apiConnectionStatus').textContent=provider?.configured
+      ?`${provider.name} is ready on your local Vynqode backend. Requests may be billed by the provider.`
+      :provider?'Configure this provider on your local Node backend, then restart Vynqode.':'Run the Vynqode backend locally to connect this provider.';
+    $('connectApi').disabled=!provider?.configured;
+  }
+  function connectApi(){
+    const provider=state.providers.find(p=>p.id===$('apiProvider').value),model=$('apiModel').value;
+    if(!provider?.configured||!provider.models.includes(model)){note('Configure the selected provider on your local backend first.',true);return;}
+    state.engine=cloud.makeEngine(provider.id,model);state.source='api';state.model=model;
+    $('activeModel').textContent=provider.name+' · '+model;
+    $('aiLight').classList.add('ready');hideModal('modelDialog');
+    note(provider.name+' connected through the local backend. AI requests may incur costs.');
+  }
+  function quickOpen(){
+    const results=$('quickFileResults');$('quickFileInput').value='';
+    function paint(){const q=$('quickFileInput').value.toLowerCase().trim();results.textContent='';
+      for(const path of Object.keys(state.project.files).sort().filter(x=>x.toLowerCase().includes(q)).slice(0,60)){
+        const b=document.createElement('button');b.type='button';b.dataset.path=path;b.textContent=path;results.append(b);
+      }
+      if(!results.children.length){const p=document.createElement('p');p.textContent='No matching files';results.append(p);}
+    }
+    paint();showModal('quickOpenDialog');$('quickFileInput').focus();
+    $('quickFileInput').oninput=paint;
+  }
+  function selectQuick(path){hideModal('quickOpenDialog');switchFile(path);mobileSection('editor');}
   async function discoverModels(){
     $('discoverModels').disabled=true;
     try{
@@ -136,7 +212,7 @@
       modelProgress('Loading model. Large downloads can take time…',0.01);
       if(state.engine){await state.engine.unload?.();state.engine=null;}
       state.engine=await state.module.CreateMLCEngine(id,{initProgressCallback:e=>modelProgress(e.text||'Loading local model…',e.progress||0)},{context_window_size:4096});
-      state.model=id;localStorage.setItem('vynqode-model-choice',id);
+      state.model=id;state.source='browser';localStorage.setItem('vynqode-model-choice',id);
       $('activeModel').textContent=id;$('aiLight').classList.add('ready');modelProgress('Ready · on-device model '+id,1);hideModal('modelDialog');note('AI model loaded locally');
     }catch(e){modelProgress('Could not load model: '+e.message,0);note('AI model unavailable: '+e.message,true);}
     finally{state.busy=false;$('loadModel').disabled=false;}
@@ -179,13 +255,29 @@
     $('codeEditor').addEventListener('input',()=>{state.dirty=true;$('fileBadge').textContent=(state.current||'')+' •';updateGutter();});
     $('codeEditor').addEventListener('scroll',()=>{$('lineNumbers').scrollTop=$('codeEditor').scrollTop;});
     $('codeEditor').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const ta=e.currentTarget;ta.setRangeText('  ',ta.selectionStart,ta.selectionEnd,'end');ta.dispatchEvent(new Event('input'));}});
-    document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveOpen();}if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();preview();}});
+    document.addEventListener('keydown',e=>{
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveOpen();}
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){e.preventDefault();quickOpen();}
+      if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='f'){e.preventDefault();mobileSection('files');$('fileSearch').focus();}
+      if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&e.target.id!=='assistantPrompt'){e.preventDefault();preview();}
+    });
     $('newProject').onclick=newProject;$('projectName').onclick=renameProject;$('addFile').onclick=createFile;$('renameFile').onclick=renameFile;$('deleteFile').onclick=deleteFile;
     $('saveFile').onclick=saveOpen;$('checkSyntax').onclick=checkProject;$('runPreview').onclick=preview;$('refreshPreview').onclick=preview;$('undoChange').onclick=undo;
-    $('editorTab').onclick=()=>setView('editor');$('previewTab').onclick=preview;
+    $('editorTab').onclick=()=>setView('editor');$('previewTab').onclick=()=>{setView('preview');preview();};$('splitTab').onclick=()=>{setView('split');preview();};
     $('exportProject').onclick=exportZip;$('importProject').onclick=()=>$('importInput').click();
     $('importInput').onchange=async e=>{try{await importFiles(e.target.files);}finally{e.target.value='';}};
     $('configureModel').onclick=()=>{showModal('modelDialog');checkGPU();};$('discoverModels').onclick=discoverModels;$('loadModel').onclick=loadModel;
+    $('localEngineTab').onclick=()=>switchEngineTab('local');$('apiEngineTab').onclick=()=>switchEngineTab('api');
+    $('refreshProviders').onclick=refreshProviders;$('apiProvider').onchange=syncApiModel;$('connectApi').onclick=connectApi;
+    $('fileSearch').oninput=()=>{const q=$('fileSearch').value.trim().toLowerCase();for(const row of $('fileList').children)row.hidden=!!q&&!row.dataset.file.toLowerCase().includes(q);};
+    $('quickOpen').onclick=quickOpen;
+    $('quickFileResults').onclick=e=>{const b=e.target.closest('button[data-path]');if(b)selectQuick(b.dataset.path);};
+    $('quickFileInput').onkeydown=e=>{if(e.key==='Enter'){const b=$('quickFileResults').querySelector('button[data-path]');if(b)selectQuick(b.dataset.path);}};
+    document.querySelectorAll('[data-close-quick]').forEach(x=>x.onclick=()=>hideModal('quickOpenDialog'));
+    $('railFiles').onclick=()=>{mobileSection('files');$('fileSearch').focus();};
+    $('railSearch').onclick=()=>{mobileSection('files');$('fileSearch').focus();};
+    $('railAssistant').onclick=()=>{mobileSection('assistant');$('assistantPrompt').focus();};
+    $('railSettings').onclick=()=>{showModal('modelDialog');switchEngineTab('api');};
     document.querySelectorAll('[data-close-modal]').forEach(x=>x.onclick=()=>hideModal('modelDialog'));
     $('askAssistant').onclick=askAI;$('proposeEdits').onclick=suggestEdits;
     $('approveChanges').onclick=applyReview;$('rejectChanges').onclick=()=>{state.proposal=null;hideModal('reviewDialog');note('AI edits rejected; no files modified');};
@@ -196,6 +288,7 @@
     document.querySelectorAll('[data-section]').forEach(x=>x.onclick=()=>mobileSection(x.dataset.section));
     window.addEventListener('message',event=>{if(event.source!==$('previewFrame').contentWindow||!event.data?.vynqodePreview||event.data.token!==state.frameNonce)return;if(event.data.level==='error'){note('Preview: '+String(event.data.message).slice(0,160),true);} });
   }
+  if(!cloud)throw Error('Vynqode secure cloud bridge is missing');
   load();wire();render();mobileSection('editor');
   // Public, intentionally limited diagnostics interface for automation/test harnesses.
   window.Vynqode = Object.freeze({ getProject:()=>JSON.parse(JSON.stringify(state.project)),getModel:()=>state.model,

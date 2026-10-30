@@ -1,3 +1,7 @@
+# Vynqode IDE v0.13.0
+
+**New in v0.13:** a refined four-section coding workbench (activity rail, searchable explorer, code/preview split view, and single AI assistant), file quick-open (`Ctrl/Cmd+P`), and optional OpenAI (ChatGPT API), Anthropic Claude, Gemini, OpenRouter, Groq, DeepSeek, Ollama, and custom inference via the local-only Node provider bridge. The **GitHub Pages site cannot securely host paid API credentials**. See [provider setup](docs/API_PROVIDERS.md) for running the same IDE at `http://127.0.0.1:3000`. Previous local browser projects remain compatible.
+
 # Vynqode 0.12.0 — focused coding IDE
 
 ![Vynqode IDE](docs/vynqode-preview.png)

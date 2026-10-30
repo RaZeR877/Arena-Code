@@ -11,6 +11,7 @@ const { pathToFileURL, fileURLToPath } = require('node:url');
 const { spawn } = require('node:child_process');
 const { makeZip, parseZip } = require('./zip-utils.cjs');
 const checkpoints = require('./project-checkpoints.cjs');
+const aiProviders = require('./ai-providers.cjs');
 
 const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
@@ -260,6 +261,28 @@ async function handleApi(req, res, url) {
       models: MODELS, workspaceStorage: 'local-filesystem', localOnlyRecommended: true, lspServers: Object.keys(LSP_CONFIG),
       limits: { maxFileBytes: MAX_FILE, maxFiles: MAX_FILES, maxProjectBytes: MAX_PROJECT_BYTES, maxArchiveBytes: MAX_ARCHIVE_BYTES },
       features: { zipImportExport: true, localGit: true, approvalBasedAgent: true, devServerLifecycle: true, jsonPythonSyntaxChecks: true, monacoEditor: true, lspBridge: true, nodeDebugger: true, dockerBuild: EXECUTION_BACKEND === 'docker', dependencyInstall: EXECUTION_BACKEND === 'docker' } }); return true;
+  }
+  if (url.pathname === '/api/ide/providers' && req.method === 'GET') {
+    // Never expose credential presence on a public hosted or remotely bound server.
+    if (HOSTED_MODE || !['127.0.0.1','localhost','::1'].includes(HOST) || !['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) {
+      fail(res, 403, 'AI provider bridge is localhost-only.'); return true;
+    }
+    json(res, 200, {providers:aiProviders.listProviders()}); return true;
+  }
+  if (url.pathname === '/api/ide/complete' && req.method === 'POST') {
+    if (HOSTED_MODE || !['127.0.0.1','localhost','::1'].includes(HOST) || !['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) {
+      fail(res, 403, 'AI provider bridge is localhost-only.'); return true;
+    }
+    if (!rateLimit(req, 12, 'ide-ai')) { fail(res, 429, 'AI request rate limit exceeded.'); return true; }
+    try {
+      const body = await readBody(req, 140 * 1024);
+      const result = await aiProviders.complete(body);
+      json(res, 200, result);
+    } catch (error) {
+      const status=Number(error.status) || (error.name==='TimeoutError'?504:502);
+      fail(res, status, status===502 && !error.status ? 'Provider unreachable. Check the local server network.' : String(error.message).slice(0,400), 'IDE_PROVIDER_ERROR');
+    }
+    return true;
   }
   if (url.pathname === '/api/lsp/status' && req.method === 'GET') { json(res, 200, { servers: Object.fromEntries(Object.keys(LSP_CONFIG).map(key => [key, true])), instructions: 'Only administrators who run this local Arena server can configure ARENA_LSP_SERVERS. Commands are never accepted from browser requests.' }); return true; }
   if (url.pathname.startsWith('/api/')) {

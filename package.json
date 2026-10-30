@@ -1,6 +1,6 @@
 {
   "name": "vynqode",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "scripts": {
     "start": "node server.js",
@@ -8,18 +8,18 @@
     "test:ui": "python3 test/pages-browser.py",
     "eval": "node evaluation/run.cjs",
     "eval:dry": "node evaluation/run.cjs --dry-run",
-    "check": "node --check scripts/copy-monaco.cjs && node --check test/fixtures/fake-docker.cjs && node --check server.js && node --check zip-utils.cjs && node --check public/app.js && node --check public/studio.js && node --check public/model-catalog.js && node --check public/templates.js && node --check public/workspace.js && node --check public/editor.js && node --check hosted/hosted.cjs && node --check runner/worker.cjs && node --check evaluation/run.cjs && node --check evaluation/validate-fixtures.cjs && node --check test/api.test.cjs && node --check test/runner.test.cjs && node --check test/fixtures/fake-docker.cjs && node --check test/hosted.test.cjs && node --check test-studio.cjs && node --check runner/preview.cjs && node --check scripts/verify-runner-e2e.cjs && node --check test/preview.test.cjs && node --check test/hosted-preview.test.cjs && node --check project-checkpoints.cjs && node --check runner/preview-stream.cjs && node --check test/preview-stream.test.cjs && node --check public/ide.js && node --check public/browser-core.js && node --check public/ai-workflow.js",
+    "check": "node --check scripts/copy-monaco.cjs && node --check test/fixtures/fake-docker.cjs && node --check server.js && node --check zip-utils.cjs && node --check public/app.js && node --check public/studio.js && node --check public/model-catalog.js && node --check public/templates.js && node --check public/workspace.js && node --check public/editor.js && node --check hosted/hosted.cjs && node --check runner/worker.cjs && node --check evaluation/run.cjs && node --check evaluation/validate-fixtures.cjs && node --check test/api.test.cjs && node --check test/runner.test.cjs && node --check test/fixtures/fake-docker.cjs && node --check test/hosted.test.cjs && node --check test-studio.cjs && node --check runner/preview.cjs && node --check scripts/verify-runner-e2e.cjs && node --check test/preview.test.cjs && node --check test/hosted-preview.test.cjs && node --check project-checkpoints.cjs && node --check runner/preview-stream.cjs && node --check test/preview-stream.test.cjs && node --check public/ide.js && node --check public/browser-core.js && node --check public/ai-workflow.js && node --check ai-providers.cjs && node --check public/cloud-bridge.js",
     "ci": "npm run check && npm run check:pages && npm test && npm run eval:fixtures && npm run eval:dry",
     "postinstall": "node scripts/copy-monaco.cjs",
     "eval:fixtures": "node evaluation/validate-fixtures.cjs",
     "test:runner-e2e": "node scripts/verify-runner-e2e.cjs",
     "test:browser:agent": "python3 test/browser_workflow.py",
     "build:pages": "node scripts/build-pages.cjs",
-    "check:pages": "node --check scripts/build-pages.cjs && node --check public/ide.js && node --check pages/browser-core.js && node --check public/model-catalog.js && node --check pages/ai-workflow.js && node --test test/pages.test.cjs test/browser-project.test.cjs test/ai-upgrade.test.cjs",
+    "check:pages": "node --check scripts/build-pages.cjs && node --check public/ide.js && node --check public/cloud-bridge.js && node --check pages/browser-core.js && node --check public/model-catalog.js && node --check pages/ai-workflow.js && node --test test/pages.test.cjs test/browser-project.test.cjs test/ai-upgrade.test.cjs",
     "test:browser:pages": "python3 test/pages-browser.py",
     "test:ui:ide": "python3 test/pages-browser.py"
   },
-  "description": "Vynqode \u2014 a focused local-first coding IDE with an optional on-device AI assistant",
+  "description": "Vynqode IDE \u2014 refined browser workbench with secure local multi-provider AI bridge",
   "engines": {
     "node": ">=20"
   },

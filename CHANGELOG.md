@@ -1,3 +1,11 @@
+# v0.13.0 — Refined IDE and multiple AI providers
+
+- Reworked the workbench with an activity rail, improved editor/assistant hierarchy, file filtering, quick-open, status bar and split editor/preview.
+- Added local Node proxy endpoints `/api/ide/providers` and `/api/ide/complete` with server-only environment keys, origin and locality restrictions, rate/size/time limits, and fixed provider/model allowlists.
+- Added OpenAI API, Anthropic Claude, Google Gemini, OpenRouter, Groq, DeepSeek, Ollama, and configurable OpenAI-compatible inference.
+- Static GitHub Pages UI lists providers but deliberately does not accept secret API keys or promise paid inference without a secure backend.
+- Added provider request-format tests, local HTTP bridge integration test and browser E2E coverage.
+
 ## Vynqode 0.12.0 (2026-10-29)
 
 - Rebranded user-facing application as Vynqode; preliminary exact-name screening only, not legal clearance.
