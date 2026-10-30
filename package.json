@@ -1,6 +1,6 @@
 {
   "name": "vynqode",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "scripts": {
     "start": "node server.js",
@@ -19,7 +19,7 @@
     "test:browser:pages": "python3 test/pages-browser.py",
     "test:ui:ide": "python3 test/pages-browser.py"
   },
-  "description": "Vynqode IDE \u2014 refined browser workbench with secure local multi-provider AI bridge",
+  "description": "Vynqode IDE \u2014 polished developer workbench and localhost-only session API key setup",
   "engines": {
     "node": ">=20"
   },

@@ -1,3 +1,9 @@
+## v0.14.0 — clearer AI key setup and premium workbench
+
+- Reworked the IDE visual hierarchy, typography, command buttons, AI prompt cards, and focus mode.
+- Added safe, localhost-only per-session API key entry and removal for supported remote inference providers; no browser-side persistence or public Pages credential form.
+- Expanded provider bridge and origin/security tests; GitHub Pages displays useful local setup instructions.
+
 # v0.13.0 — Refined IDE and multiple AI providers
 
 - Reworked the workbench with an activity rail, improved editor/assistant hierarchy, file filtering, quick-open, status bar and split editor/preview.

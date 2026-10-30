@@ -262,12 +262,40 @@ async function handleApi(req, res, url) {
       limits: { maxFileBytes: MAX_FILE, maxFiles: MAX_FILES, maxProjectBytes: MAX_PROJECT_BYTES, maxArchiveBytes: MAX_ARCHIVE_BYTES },
       features: { zipImportExport: true, localGit: true, approvalBasedAgent: true, devServerLifecycle: true, jsonPythonSyntaxChecks: true, monacoEditor: true, lspBridge: true, nodeDebugger: true, dockerBuild: EXECUTION_BACKEND === 'docker', dependencyInstall: EXECUTION_BACKEND === 'docker' } }); return true;
   }
+  if (url.pathname === '/api/ide/credentials' && (req.method === 'POST' || req.method === 'DELETE')) {
+    const allowedHost=['127.0.0.1','localhost','::1'].includes(HOST);
+    const allowedPeer=['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+    // Require a matching browser Origin for credential writes, in addition to loopback.
+    const origin=req.headers.origin;
+    const matchesOrigin=origin && (()=>{try{
+      const u=new URL(origin); const h=new URL('http://'+(req.headers.host||''));
+      return ['127.0.0.1','localhost','[::1]'].includes(u.hostname) && u.origin===h.origin;
+    }catch{return false;}})();
+    if (HOSTED_MODE || !allowedHost || !allowedPeer || !matchesOrigin) {
+      fail(res,403,'Local browser origin required for API key configuration.');return true;
+    }
+    if (!rateLimit(req,8,'ide-credentials')) {fail(res,429,'Too many configuration attempts.');return true;}
+    if (!String(req.headers['content-type']||'').startsWith('application/json')) {fail(res,415,'JSON required.');return true;}
+    try {
+      const body=await readBody(req,2048);
+      if (!body || typeof body !== 'object' || Array.isArray(body)) throw Object.assign(Error('Invalid request.'),{status:400});
+      if (req.method==='POST') {
+        aiProviders.setSessionKey(body.provider,body.apiKey);
+        // Never echo a key in an API response or save it to disk.
+        res.setHeader('Cache-Control','no-store');json(res,200,{ok:true,provider:body.provider,scope:'process-memory'});
+      } else {
+        aiProviders.removeSessionKey(body.provider);
+        res.setHeader('Cache-Control','no-store');json(res,200,{ok:true,provider:body.provider});
+      }
+    } catch (e) {fail(res,e.status||400,String(e.message).slice(0,160));}
+    return true;
+  }
   if (url.pathname === '/api/ide/providers' && req.method === 'GET') {
     // Never expose credential presence on a public hosted or remotely bound server.
     if (HOSTED_MODE || !['127.0.0.1','localhost','::1'].includes(HOST) || !['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) {
       fail(res, 403, 'AI provider bridge is localhost-only.'); return true;
     }
-    json(res, 200, {providers:aiProviders.listProviders()}); return true;
+    json(res, 200, {providers:aiProviders.listProviders(aiProviders.effectiveEnv())}); return true;
   }
   if (url.pathname === '/api/ide/complete' && req.method === 'POST') {
     if (HOSTED_MODE || !['127.0.0.1','localhost','::1'].includes(HOST) || !['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) {
@@ -276,7 +304,7 @@ async function handleApi(req, res, url) {
     if (!rateLimit(req, 12, 'ide-ai')) { fail(res, 429, 'AI request rate limit exceeded.'); return true; }
     try {
       const body = await readBody(req, 140 * 1024);
-      const result = await aiProviders.complete(body);
+      const result = await aiProviders.complete(body,{env:aiProviders.effectiveEnv()});
       json(res, 200, result);
     } catch (error) {
       const status=Number(error.status) || (error.name==='TimeoutError'?504:502);

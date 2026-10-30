@@ -10,6 +10,29 @@ const PROVIDERS = Object.freeze({
   ollama: { name:'Ollama (local)', env:null, models:['qwen2.5-coder:7b','codellama:7b'], endpoint:'http://127.0.0.1:11434/v1/chat/completions', kind:'openai-compatible' },
   custom: { name:'Custom OpenAI-compatible', env:'VYNQODE_CUSTOM_API_KEY', models:['custom-model'], endpoint:null, kind:'openai-compatible' }
 });
+// Optional keys entered on the LOCAL workbench are kept in this process only.
+// Never persist, log, serialize, or copy them into the static Pages build.
+const sessionCredentials = new Map();
+function effectiveEnv(env = process.env) {
+  const values = {...env};
+  for (const [provider,key] of sessionCredentials) {
+    if (PROVIDERS[provider]?.env) values[PROVIDERS[provider].env] = key;
+  }
+  return values;
+}
+function setSessionKey(provider, key) {
+  const spec = PROVIDERS[provider];
+  if (!spec || !spec.env || provider === 'custom') throw Object.assign(Error('This provider uses server configuration.'),{status:400});
+  if (typeof key !== 'string' || key.length < 8 || key.length > 512 || /[\s\x00-\x1f\x7f]/.test(key)) {
+    throw Object.assign(Error('Invalid API key format.'),{status:400});
+  }
+  sessionCredentials.set(provider, key);
+  return {provider,configured:true};
+}
+function removeSessionKey(provider) {
+  if (!PROVIDERS[provider]?.env || provider === 'custom') throw Object.assign(Error('Unsupported provider.'),{status:400});
+  return sessionCredentials.delete(provider);
+}
 const safeModel = x => typeof x === 'string' && /^[A-Za-z0-9][\w./:+-]{0,119}$/.test(x);
 function configuredModels(id, env = process.env) {
   const spec = PROVIDERS[id]; if (!spec) return [];
@@ -97,4 +120,4 @@ async function complete(body,{env=process.env,fetcher=globalThis.fetch}={}) {
   }
   return {model:args.model,provider:args.provider,text:extractText(args.provider,payload)};
 }
-module.exports={PROVIDERS,configured,configuredModels,listProviders,validateRequest,makeRequest,extractText,secureCustomEndpoint,complete};
+module.exports={effectiveEnv,setSessionKey,removeSessionKey,PROVIDERS,configured,configuredModels,listProviders,validateRequest,makeRequest,extractText,secureCustomEndpoint,complete};

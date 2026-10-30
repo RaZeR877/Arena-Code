@@ -6,7 +6,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const out = path.join(root, 'dist', 'pages');
 const files = [
-  ['public/index.html','index.html'],['public/ide.css','ide.css'],['public/ide.js','ide.js'],
+  ['public/index.html','index.html'],['public/ide.css','ide.css'],['public/workbench.css','workbench.css'],['public/ide.js','ide.js'],
   ['public/favicon.svg','favicon.svg'],['public/model-catalog.js','model-catalog.js'],['public/cloud-bridge.js','cloud-bridge.js'],
   ['pages/browser-core.js','browser-core.js'],['pages/ai-workflow.js','ai-workflow.js']
 ];

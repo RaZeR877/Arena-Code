@@ -1,0 +1,187 @@
+/* Vynqode 0.14 — restrained, focused developer workbench.
+   Kept separate from the baseline IDE stylesheet for easy iteration. */
+:root {
+  --bg:#080c14; --panel:#101722; --panel2:#151d2b; --line:#263143;
+  --muted:#91a0b6; --accent:#9b8bff; --lavender:#b5a8ff; --text:#eaf0fc;
+  font-size:14px; color:var(--text);background:var(--bg);
+  font-family:Inter,'Segoe UI',ui-sans-serif,system-ui,sans-serif;
+}
+body {color:var(--text);background:var(--bg)}
+.app {min-height:520px;background:#080c14}
+button,input,textarea,select {font-family:inherit}
+button {transition:background .15s,border-color .15s,opacity .15s}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible {outline-color:#a495ff}
+.topbar {
+  height:66px;gap:24px;padding:0 22px;
+  background:#0b101a;border-bottom:1px solid #222c3c;
+}
+.brand {gap:11px}
+.brand-symbol {
+  width:40px;height:40px;border-radius:13px;padding:0 3px 0 0;
+  background:linear-gradient(145deg,#7e71f2,#a7a0ff);border:1px solid #c1b7ff80;
+  color:white;font-size:23px;box-shadow:0 5px 20px #8975ff29;
+}
+.brand-symbol span {color:#e7e4ff}
+.brand strong {font-size:19px;letter-spacing:-.8px;font-weight:740}
+.brand-edition {background:#26213d;color:#c4baff;border:1px solid #40365f;font-size:9px;padding:5px 7px;letter-spacing:1.5px}
+.project-pill {min-width:0;gap:10px;padding-left:8px;border-left:1px solid #283245}
+.project-pill button {max-width:185px;padding:8px 2px;color:#e9edfb;font-size:12px}
+.breadcrumb-root,.breadcrumb-separator {font-size:12px;color:#70809c}
+.breadcrumb-separator {color:#4c5b74}
+.local-tag {color:#91d8bc;background:#86d7b813;border:1px solid #72c4a02f;border-radius:99px;letter-spacing:.6px;padding:5px 8px}
+.header-actions {gap:6px}
+.header-actions button,.header-actions .header-github {font-size:11px;padding:9px 12px;border-radius:9px;color:#aab8d0;border:1px solid transparent}
+.header-actions button:hover,.header-actions .header-github:hover {background:#1b2638;color:#f0f3ff;border-color:#35415a}
+.header-actions #exportProject {background:#1d273a;color:#d5deff;border:1px solid #36435c}
+.header-actions .header-connect {
+  margin-right:8px;padding:9px 13px;background:#252044;color:#c9beff;
+  border:1px solid #6154a35c;font-weight:650;white-space:nowrap;
+}
+.header-actions .header-connect:hover {background:#332956;border-color:#8879d7}
+.status-orb {display:inline-block;width:7px;height:7px;background:#a59abf;border-radius:50%;margin-right:6px;vertical-align:1px}
+.header-connect.connected .status-orb {background:#6de3ba;box-shadow:0 0 10px #6de3ba88}
+#focusMode {border:1px solid #2c364a}
+.ide-layout {grid-template-columns:54px 240px minmax(0,1fr) 375px;background:#0c111b}
+.activity-rail {background:#0a0f18;border-right:1px solid #222d3e;padding:16px 6px;gap:10px}
+.rail-btn {width:42px;height:42px;border-radius:11px;font-size:23px;color:#7383a0}
+.rail-btn.selected {background:#282343;color:#beb2ff;box-shadow:inset 3px 0 #9d91ff}
+.rail-btn:hover,.rail-btn:focus-visible {background:#252a40;color:#edf0ff}
+.explorer {background:#0d1420;border-right:1px solid #242e40}
+.pane-heading {height:60px;padding:0 19px;color:#c6d2e7;font-size:10px;letter-spacing:1.3px}
+.icon-action {border-radius:8px;background:#1e2b3d;border:1px solid #36435b;color:#b9afff;font-size:20px}
+.project-tree-title {padding:12px 17px;color:#aebed9;background:#111c2a;border-color:#273449;font-size:11px;letter-spacing:.25px}
+.tree-caret {color:#a59afd}
+.explorer-search {margin:12px 10px 12px;padding:9px 10px;background:#0b111c;border-color:#303d52;border-radius:9px}
+.explorer-search:focus-within {border-color:#988aff;box-shadow:0 0 0 2px #988aff17}
+.explorer-search input {font-size:12px}
+.file-list {padding:2px 7px 10px}
+.file-row {padding:12px 10px;border-radius:8px;font-size:12px;gap:11px;margin:3px 0}
+.file-row:hover {background:#192436}
+.file-row.selected {background:#282544!important;color:#e9e6ff;box-shadow:inset 3px 0 #aa9aff}
+.file-row.selected:before {display:none}
+.file-row .file-icon {color:#b1a9fb;min-width:22px;text-align:center}
+.explorer-footer {background:#0c121f;padding:17px;color:#b9c7dd;border-top-color:#273348}
+.explorer-dot {background:#6ed7ae}
+.explorer-footer p {font-size:11px;color:#8495ad}
+.workspace {background:#0b101a;min-width:0}
+.editor-tabs {height:54px;background:#101824;border-color:#293447;padding-left:12px}
+.editor-tabs>button {padding:0 18px;color:#98a8c0;font-size:12px;border-radius:8px 8px 0 0}
+.editor-tabs>button:hover {color:#dcdfff;background:#1a2434}
+.editor-tabs>button.active {color:#e9e4ff;background:#1b2034;border-bottom:2px solid #ad9bff}
+.file-badge {color:#e4e9fb;font-size:11px;padding:0 12px;max-width:180px;white-space:nowrap}
+.file-status {align-self:center;white-space:nowrap;color:#8295ad;font-size:10px}
+.file-status-dot {display:inline-block;width:5px;height:5px;background:#6fcbaa;border-radius:50%;margin-right:5px}
+.tab-actions button {padding:8px 7px;font-size:11px;color:#8497af}
+.tab-actions button:hover {color:#e8edff}
+.editor-surface {background:radial-gradient(ellipse at 85% 3%,#5958ae08,transparent 45%),#0b101a}
+.code-gutter {background:transparent;min-width:64px;font:13px/1.85 'Cascadia Code','Fira Code',Consolas,monospace;color:#495972;padding:27px 16px 20px 18px}
+.editor-surface textarea {font:14px/1.85 'Cascadia Code','Fira Code',Consolas,monospace;padding:27px 22px 28px 0;color:#cbdaf6;caret-color:#b9adff;letter-spacing:.1px}
+.editor-surface textarea::selection {background:#8677e548}
+.workspace-footer {height:59px;background:#101824;border-color:#293448;padding:0 16px}
+.workspace-footer>span {font-size:11px;color:#95a6bd}
+.workspace-footer button {font-size:11px;padding:10px 13px;border-color:#344157;color:#b4c2d9;border-radius:9px}
+.primary-button,.workspace-footer .primary-button {background:#9483f7!important;color:#10101f!important;border:1px solid #a89bff!important;font-weight:750;box-shadow:0 2px 14px #9b8cff21}
+.primary-button:hover,.workspace-footer .primary-button:hover {background:#b0a4ff!important}
+.secondary-button {background:#1c293b}
+.diagnostics {background:#101824;border-top-color:#293448}
+.diagnostics summary {color:#97a6bf}
+.preview-surface {background:#151e2d}
+.preview-toolbar {background:#121a27;border-bottom:1px solid #344256}
+.live-dot {background:#6bd8ae}
+.assistant {background:#0d1420;border-left:1px solid #283449}
+.assistant-heading {height:72px;background:#111a28;border-color:#2a384d;padding:0 21px}
+.assistant-icon {width:39px;height:39px;background:linear-gradient(135deg,#333053,#22263f);border:1px solid #6e5eaa80;color:#c2b5ff;border-radius:12px;font-size:25px}
+.assistant-heading strong {font-size:14px;letter-spacing:-.1px}
+.assistant-heading small {font-size:11px;color:#91a4bb}
+.ai-light.ready {background:#67d6ad;box-shadow:0 0 10px #60d5a980}
+.model-strip {background:#0f1724;padding:14px 19px;border-color:#273347}
+.model-strip strong {font-size:12px;max-width:220px}
+.model-strip button {padding:9px 11px;border-radius:9px;background:#20293b;border:1px solid #404d68;color:#cdd8ec}
+.micro-label {font-size:9px;color:#8095b0}
+.chat-log {padding:20px 18px 28px;background:radial-gradient(ellipse at 56% 0%,#38325e20,transparent 48%)}
+.welcome {padding:18px 3px;background:transparent;border:0;max-width:100%}
+.welcome-brand {display:flex;align-items:center;gap:13px;margin-bottom:26px;color:#ac9df1;font-size:10px;letter-spacing:1.6px;font-weight:750}
+.welcome-brand .sparkle {display:grid;place-items:center;width:47px;height:47px;border-radius:14px;font-size:27px;background:#282445;border:1px solid #51468d;box-shadow:0 8px 30px #6b5ac215}
+.welcome h2 {font-size:29px;line-height:1.17;letter-spacing:-1px;margin:0 0 17px;font-weight:725;color:#f2f3ff}
+.welcome h2 em {font-style:normal;background:linear-gradient(90deg,#c2b7ff,#8dd6e2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.welcome p {font-size:12px;line-height:1.95;color:#99aac4;max-width:340px}
+.welcome-divider {height:1px;background:linear-gradient(90deg,#344055,transparent);margin:30px 0 23px}
+.welcome-caption {font-size:10px;letter-spacing:1.4px;color:#768ba7;font-weight:760;margin-bottom:11px}
+.suggestions {display:flex;flex-direction:column;gap:9px;margin-top:0}
+.suggestions button {width:100%;text-align:left;display:flex;align-items:center;gap:10px;border:1px solid #303c52;background:#151f2f;color:#ccd7ea;padding:12px 12px;border-radius:11px;font-size:12px}
+.suggestions button:hover {background:#202b40;border-color:#615b9f}
+.suggestions button span:first-child {font-size:18px;color:#b4a7ff;width:19px}
+.suggestions button span:last-child {margin-left:auto;color:#667e9a}
+.bubble.user {background:#302c55;border:1px solid #635ba655}
+.bubble.ai {background:#172338;border:1px solid #34445d}
+.bubble strong {color:#b6aaff}
+.chat-compose {background:#111a29;border-color:#29364b;padding:16px 17px}
+.chat-compose label {color:#9eb0ca}
+.chat-compose textarea {margin:11px 0 10px;padding:14px;background:#0c1421;border:1px solid #384762;min-height:88px;border-radius:13px;font-size:12px;color:#eef0fa}
+.chat-compose textarea:focus {border-color:#a99bff;box-shadow:0 0 0 3px #a99bff1e}
+.compose-actions {justify-content:space-between;gap:9px}
+.compose-actions button {flex:1;padding:11px 12px;border-radius:9px;font-size:12px}
+.compose-actions .outline-accent {border:1px solid #7067bb;background:#222140;color:#d4c9ff;font-weight:650}
+.compose-actions .outline-accent:hover {background:#342b58}
+.chat-compose small {color:#7e91ae}
+.statusbar {background:#111829;border-top:1px solid #2b3850;color:#91a4bd;font-size:10px}
+.status-branch {color:#b5a6fc}.status-sync {color:#78ceb0}
+.statusbar button {color:#d1caff}
+.provider-modal {width:min(96vw,660px);background:#141d2b;border-color:#485477;border-radius:18px;box-shadow:0 45px 150px #000b}
+.provider-modal .modal-header {padding:27px 29px 12px}
+.modal-eyebrow {display:block;font-size:10px;letter-spacing:1.8px;color:#ac9cff;font-weight:750;margin-bottom:11px}
+.provider-modal .modal-header h2 {font-size:25px;letter-spacing:-.7px}
+.provider-modal .modal-header p {font-size:12px}
+.engine-tabs {margin:11px 29px 0;border-color:#36425a;background:#0e1726}
+.engine-tabs button {font-size:12px;padding:12px}
+.engine-tabs button.active {background:#393557;color:#eee9ff}
+.provider-modal .model-body {padding:21px 29px 28px}
+.provider-modal .model-notice {background:#22263d;border-left-color:#a497ff;color:#b9c6dc;padding:15px 16px;border-radius:0 9px 9px 0}
+.model-body label {font-size:10px;color:#a1b2cb}
+.model-body select {background:#0e1828;border-color:#465573;padding:13px 15px;border-radius:10px}
+.api-key-setup {padding:15px 0 5px;margin:10px 0 8px}
+.api-key-heading {display:flex;align-items:center;justify-content:space-between;gap:8px}
+.api-key-heading label {margin:0}
+.api-key-heading a {font-size:11px;color:#b7aaff}
+.session-only {font-size:9px;color:#95c8b3;background:#6cd0a014;border:1px solid #80d2ae3d;border-radius:5px;margin-left:6px;padding:3px 5px;letter-spacing:.4px}
+.key-input-wrap {display:flex;align-items:center;margin-top:12px;background:#0d1726;border:1px solid #405173;border-radius:10px;overflow:hidden}
+.key-input-wrap:focus-within {border-color:#a398ff}
+.key-input-wrap input {min-width:0;flex:1;padding:14px 13px;border:0;background:transparent;color:#f0f4ff;outline:none;font-family:ui-monospace,Consolas,monospace;letter-spacing:.4px}
+.key-input-wrap button {margin-right:6px;padding:8px 10px;color:#b5c4d8;border-radius:7px;font-size:11px}
+.key-actions {display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+.key-actions button {padding:10px 13px;border:1px solid #425273;border-radius:9px;font-size:11px;color:#c2cce0}
+.key-actions button:first-child {border-color:#9284ff;background:#3b356c;color:#e3deff;font-weight:650}
+.key-feedback {font-size:11px!important;color:#8fa2bc!important;margin:9px 0 2px!important}
+.api-static-setup {margin:16px 0;padding:18px;border-radius:12px;border:1px solid #69609e;background:#26223a;color:#dfd6fc}
+.api-static-setup strong {font-size:13px}
+.api-static-setup p {font-size:12px;line-height:1.65;color:#bec6de}
+.api-static-setup code {display:block;padding:12px;background:#0d1523;border-radius:8px;color:#b9f2d4;font:12px ui-monospace,monospace}
+.model-buttons button {border-radius:9px}
+.api-setup {border-color:#3a4763;background:#111b2a}
+.modal-bottomline {background:#111827;border-color:#35415a;color:#93a5bc}
+/* Distraction-free editing: one command toggles the surrounding panes. */
+body.focus-mode .ide-layout {grid-template-columns:1fr!important}
+body.focus-mode .activity-rail,body.focus-mode .explorer,body.focus-mode .assistant {display:none!important}
+body.focus-mode .workspace {grid-column:1!important}
+body.focus-mode .editor-surface textarea {font-size:15px}
+@media(max-width:1400px){.ide-layout{grid-template-columns:50px 205px minmax(0,1fr) 335px}.file-status{display:none}.header-actions .header-github{display:none}}
+@media(max-width:1150px){.ide-layout{grid-template-columns:48px 185px minmax(0,1fr) 295px}.breadcrumb-root,.breadcrumb-separator{display:none}.header-actions #focusMode{display:none}.welcome h2{font-size:25px}.topbar{gap:15px}}
+@media(max-width:800px){
+  .topbar{height:56px;padding:0 12px;gap:8px}.brand strong{font-size:17px}.brand-symbol{width:33px;height:33px}
+  .brand-edition,.breadcrumb-root,.breadcrumb-separator,.local-tag,.file-status{display:none}
+  .header-actions .header-connect{padding:8px 9px;font-size:11px;margin-right:0}
+  .header-actions #focusMode{display:none}
+  .ide-layout{display:block}.activity-rail{display:none}.explorer,.assistant,.workspace{grid-column:auto}
+  .welcome{padding:16px 8px}.welcome h2{font-size:27px}
+  body.focus-mode .ide-layout{display:block}body.focus-mode .workspace{display:flex}
+}
+@media(max-width:500px){
+  .project-pill{display:none}.header-actions #newProject,.header-actions #exportProject,.header-actions .header-github{display:none}
+  .header-actions #undoChange{display:none}.topbar{gap:8px}
+  .chat-log{padding:15px}.provider-modal .modal-header{padding:18px 18px 7px}
+  .engine-tabs{margin:8px 18px 0}.provider-modal .model-body{padding:15px 18px 24px}
+  .file-badge{max-width:110px}.editor-surface textarea{font-size:12px}.code-gutter{font-size:11px}
+}
+
+.api-static-setup a {color:#c8baff;text-decoration:underline;text-underline-offset:3px}
+.api-model-controls {margin-top:14px}

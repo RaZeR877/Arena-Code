@@ -29,11 +29,13 @@ try:
       for asset in ['browser-core.js','model-catalog.js','ai-workflow.js','cloud-bridge.js','ide.js']:
         page.add_script_tag(content=(ROOT/asset).read_text())
       page.add_style_tag(content=(ROOT/'ide.css').read_text())
+      page.add_style_tag(content=(ROOT/'workbench.css').read_text())
       print('Vynqode browser smoke using inline fallback')
     assert page.title()=='Vynqode — AI Coding IDE'
     assert page.locator('#fileList .file-row').count()==3
     assert page.locator('#assistantPanel').is_visible()
-    desktop=ROOT.parents[1]/'test-results'/'vynqode-v013-desktop.png'
+    assert page.locator('#headerConnectAI').is_visible()
+    desktop=ROOT.parents[1]/'test-results'/'vynqode-v014-desktop.png'
     desktop.parent.mkdir(exist_ok=True,parents=True)
     page.screenshot(path=str(desktop),full_page=False)
     assert page.locator('text=Battle').count()==0
@@ -41,10 +43,16 @@ try:
     page.locator('#configureModel').click()
     page.locator('#apiEngineTab').click()
     assert page.locator('#apiProvider option').count()==8
-    assert page.locator('#modelDialog input[type=password]').count()==0
-    page.locator('#apiConnectionStatus').wait_for(timeout=5000)
+    assert page.locator('#apiKeySetup').is_hidden()
+    assert page.locator('#apiStaticSetup').is_visible()
+    page.locator('#apiStaticSetup').wait_for(state='visible',timeout=5000)
     assert page.locator('#connectApi').is_disabled()
     page.locator('#modelDialog [data-close-modal]').click()
+    # Focus mode shows a distraction-free editor with no fake terminal.
+    page.locator('#focusMode').click()
+    assert page.locator('#assistantPanel').is_hidden()
+    page.locator('#focusMode').click()
+    assert page.locator('#assistantPanel').is_visible()
     # Functional quick-open, file filtering, and simultaneous editor/preview.
     page.locator('#quickOpen').click()
     page.locator('#quickFileInput').fill('style')
