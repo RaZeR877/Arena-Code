@@ -134,6 +134,41 @@
     ['openrouter','OpenRouter'],['groq','Groq'],['deepseek','DeepSeek'],
     ['ollama','Ollama (local)'],['custom','Custom OpenAI-compatible']
   ];
+  function syncHeaderAI(){
+    const button=$('headerConnectAI');if(!button)return;
+    button.classList.toggle('connected',Boolean(state.engine));
+    button.innerHTML=state.engine?'<span class="status-orb"></span> AI connected':'<span class="status-orb"></span> Connect AI';
+  }
+  function toggleFocus(){
+    const on=document.body.classList.toggle('focus-mode');
+    $('focusMode').textContent=on?'◫ Exit focus':'◫ Focus';
+    $('focusMode').setAttribute('aria-pressed',String(on));
+    note(on?'Focus mode · editor expanded':'All panels visible');
+  }
+  const keyLinks={openai:'https://platform.openai.com/api-keys',anthropic:'https://console.anthropic.com/settings/keys',gemini:'https://aistudio.google.com/api-keys',openrouter:'https://openrouter.ai/settings/keys',groq:'https://console.groq.com/keys',deepseek:'https://platform.deepseek.com/api_keys'};
+  async function saveSessionKey(){
+    const provider=$('apiProvider').value;
+    // Clear the actual input immediately. Never persist or log the entered key.
+    const key=$('apiKeyInput').value;$('apiKeyInput').value='';
+    if(key.length<8)return $('apiKeyFeedback').textContent='Paste a valid provider API key first.';
+    $('saveApiKey').disabled=true;
+    try {
+      await cloud.setSessionKey(provider,key);
+      await refreshProviders();
+      $('apiKeyFeedback').textContent='✓ Key connected to this local server session. Choose a model, then select Use selected API.';
+      note('Provider key connected locally. It will be cleared when the server stops.');
+    } catch(e) { $('apiKeyFeedback').textContent='Could not connect: '+e.message; }
+    finally{$('saveApiKey').disabled=false;}
+  }
+  async function clearSessionKey(){
+    $('apiKeyInput').value='';
+    try{
+      await cloud.clearSessionKey($('apiProvider').value);
+      await refreshProviders();
+      $('apiKeyFeedback').textContent='Session key removed. An environment-variable key, if set, remains available.';
+      if(state.source==='api'){$('activeModel').textContent='No model connected';$('aiLight').classList.remove('ready');state.engine=null;state.model=null;syncHeaderAI();}
+    }catch(e){$('apiKeyFeedback').textContent=e.message;}
+  }
   function switchEngineTab(name){
     state.engineMode=name;
     $('localEngineSettings').classList.toggle('hidden',name!=='local');
@@ -147,6 +182,7 @@
     $('refreshProviders').disabled=true;$('connectApi').disabled=true;
     try{
       const providers=await cloud.discover();state.providers=providers;
+      $('apiKeySetup').classList.remove('hidden');$('apiStaticSetup').classList.add('hidden');$('apiModelControls').classList.remove('hidden');
       const chosen=$('apiProvider').value;
       $('apiProvider').textContent='';
       for(const [id,name] of publicOptions){
@@ -158,7 +194,8 @@
       $('apiProvider').value=chosen||'openai';
       syncApiModel();
     }catch(e){
-      state.providers=[];$('apiModel').textContent='';$('apiConnectionStatus').textContent=e.message+' Keys must never be placed in this public website.';
+      state.providers=[];$('apiModel').textContent='';$('apiConnectionStatus').textContent='API backends require the localhost Node app.';
+      $('apiKeySetup').classList.add('hidden');$('apiStaticSetup').classList.remove('hidden');$('apiModelControls').classList.add('hidden');
       $('connectApi').disabled=true;
     }finally{$('refreshProviders').disabled=false;}
   }
@@ -170,13 +207,19 @@
       ?`${provider.name} is ready on your local Vynqode backend. Requests may be billed by the provider.`
       :provider?'Configure this provider on your local Node backend, then restart Vynqode.':'Run the Vynqode backend locally to connect this provider.';
     $('connectApi').disabled=!provider?.configured;
+    const usesSessionKey=id!=='ollama'&&id!=='custom';
+    $('apiKeySetup').classList.toggle('hidden',!state.providers.length||!usesSessionKey);
+    $('apiKeyInput').value='';
+    $('getApiKeyLink').href=keyLinks[id]||'https://platform.openai.com/api-keys';
+    $('getApiKeyLink').textContent=id==='openai'?'Get an OpenAI key ↗':'Get provider key ↗';
+    $('apiKeyFeedback').textContent=provider?.configured?'Provider ready. You can replace its key for this local session.':'Paste your key above, then select Connect key for this session.';
   }
   function connectApi(){
     const provider=state.providers.find(p=>p.id===$('apiProvider').value),model=$('apiModel').value;
     if(!provider?.configured||!provider.models.includes(model)){note('Configure the selected provider on your local backend first.',true);return;}
     state.engine=cloud.makeEngine(provider.id,model);state.source='api';state.model=model;
     $('activeModel').textContent=provider.name+' · '+model;
-    $('aiLight').classList.add('ready');hideModal('modelDialog');
+    $('aiLight').classList.add('ready');syncHeaderAI();hideModal('modelDialog');
     note(provider.name+' connected through the local backend. AI requests may incur costs.');
   }
   function quickOpen(){
@@ -213,7 +256,7 @@
       if(state.engine){await state.engine.unload?.();state.engine=null;}
       state.engine=await state.module.CreateMLCEngine(id,{initProgressCallback:e=>modelProgress(e.text||'Loading local model…',e.progress||0)},{context_window_size:4096});
       state.model=id;state.source='browser';localStorage.setItem('vynqode-model-choice',id);
-      $('activeModel').textContent=id;$('aiLight').classList.add('ready');modelProgress('Ready · on-device model '+id,1);hideModal('modelDialog');note('AI model loaded locally');
+      $('activeModel').textContent=id;$('aiLight').classList.add('ready');syncHeaderAI();modelProgress('Ready · on-device model '+id,1);hideModal('modelDialog');note('AI model loaded locally');
     }catch(e){modelProgress('Could not load model: '+e.message,0);note('AI model unavailable: '+e.message,true);}
     finally{state.busy=false;$('loadModel').disabled=false;}
   }
@@ -266,9 +309,12 @@
     $('editorTab').onclick=()=>setView('editor');$('previewTab').onclick=()=>{setView('preview');preview();};$('splitTab').onclick=()=>{setView('split');preview();};
     $('exportProject').onclick=exportZip;$('importProject').onclick=()=>$('importInput').click();
     $('importInput').onchange=async e=>{try{await importFiles(e.target.files);}finally{e.target.value='';}};
+    $('headerConnectAI').onclick=()=>{showModal('modelDialog');switchEngineTab('api');};$('focusMode').onclick=toggleFocus;
     $('configureModel').onclick=()=>{showModal('modelDialog');checkGPU();};$('discoverModels').onclick=discoverModels;$('loadModel').onclick=loadModel;
     $('localEngineTab').onclick=()=>switchEngineTab('local');$('apiEngineTab').onclick=()=>switchEngineTab('api');
     $('refreshProviders').onclick=refreshProviders;$('apiProvider').onchange=syncApiModel;$('connectApi').onclick=connectApi;
+    $('saveApiKey').onclick=saveSessionKey;$('clearApiKey').onclick=clearSessionKey;
+    $('revealApiKey').onclick=()=>{const input=$('apiKeyInput');input.type=input.type==='password'?'text':'password';$('revealApiKey').textContent=input.type==='password'?'Show':'Hide';};
     $('fileSearch').oninput=()=>{const q=$('fileSearch').value.trim().toLowerCase();for(const row of $('fileList').children)row.hidden=!!q&&!row.dataset.file.toLowerCase().includes(q);};
     $('quickOpen').onclick=quickOpen;
     $('quickFileResults').onclick=e=>{const b=e.target.closest('button[data-path]');if(b)selectQuick(b.dataset.path);};
