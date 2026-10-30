@@ -65,6 +65,13 @@ try:
     assert 'document.querySelector' in page.locator('#codeEditor').input_value()
     page.locator('#runPreview').click()
     preview=page.frame_locator('#previewFrame')
+    print('PREVIEW_DIAGNOSTIC:', page.evaluate("""() => {
+      const editor=document.getElementById('editorSurface'); const pane=document.getElementById('previewSurface'); const frame=document.getElementById('previewFrame');
+      return {view:document.getElementById('previewTab').className, workspace:document.getElementById('editorPanel').className,
+        preview:pane.className, paneDisplay:getComputedStyle(pane).display, paneHeight:pane.getBoundingClientRect().height,
+        frameHeight:frame.getBoundingClientRect().height,editorDisplay:getComputedStyle(editor).display,
+        frameSrcLength:frame.srcdoc.length};
+    }"""),flush=True)
     preview.locator('#action').wait_for(timeout=5000)
     preview.locator('#action').click(timeout=5000)
     preview.get_by_text('You are building something great!').wait_for(timeout=5000)
