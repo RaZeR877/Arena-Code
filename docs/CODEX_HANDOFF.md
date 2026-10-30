@@ -148,3 +148,5 @@ Update this file and `AGENTS.md` as architectural choices change, and keep major
 ## First development audit follow-up
 
 See [DEVELOPMENT_AUDIT.md](DEVELOPMENT_AUDIT.md) for verified gaps and test boundaries. The focused UI now has accessible open-file tabs and session-local cursor/scroll restoration. It still uses a textarea; legacy Monaco/debugging/runner features are not integrated. Navigation state is not stored in project data.
+
+The modern workspace styling uses charcoal panels and warm accents, compact chrome, a header file finder, and responsive editor/agent sections. Styles live in `public/workbench.css`; both Node and Pages use the same active shell. This visual update does not integrate the legacy terminal or Monaco editor.

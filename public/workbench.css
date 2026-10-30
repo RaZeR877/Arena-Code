@@ -195,3 +195,70 @@ body.focus-mode .editor-surface textarea {font-size:15px}
 @media(min-width:761px) {
   .workspace.split-mode .editor-surface,.workspace.split-mode .preview-surface {height:calc(100% - 54px - 38px - 56px)}
 }
+
+/* Modern workspace: quiet chrome, distinct tools, generous working space. */
+:root {--bg:#111214;--panel:#1a1b1e;--panel2:#232428;--line:#33353a;--text:#ececef;--muted:#9b9da5;--accent:#f4a66a;--lavender:#f4a66a;color-scheme:dark}
+body,.app {background:#111214;color:#ececef}
+.topbar {height:60px;background:#151618;border-color:#303136;padding:0 18px;gap:18px}
+.brand-symbol {width:30px;height:30px;border-radius:9px;background:#f4a66a;color:#25201c;border:0;box-shadow:none;font-size:20px}
+.brand-symbol span {color:#514031}.brand strong {font-size:17px;letter-spacing:-.6px}
+.brand-edition {color:#a4a5ac;background:#242529;border-color:#38393f;font-size:8px;padding:3px 5px}
+.project-pill {border:0;padding:0;gap:8px}.project-pill button {max-width:160px;font-weight:500;color:#d1d2d6}
+.breadcrumb-root,.breadcrumb-separator {display:none}.local-tag {font-size:8px;background:transparent;color:#9ca99e;border:0;padding:0;letter-spacing:.7px}
+.command-search {display:flex;align-items:center;gap:12px;flex:1;max-width:330px;min-width:140px;height:33px;padding:0 12px;background:#202124;border:1px solid #34353b;border-radius:7px;color:#8f919a;text-align:left;font-size:12px;margin:auto}
+.command-search>span {font-size:19px;color:#a9aab1}.command-search kbd {margin-left:auto;font:10px inherit;border:1px solid #42434a;padding:2px 5px;border-radius:4px;color:#9a9ca5}
+.header-actions {gap:4px}.header-actions button {border-radius:6px;padding:8px 10px;color:#aeb0b8}
+.header-actions .header-connect {background:#2c2621;border-color:#534030;color:#f5ba8b;margin:0 5px 0 0}
+.header-actions .header-connect:hover {background:#443124;border-color:#b37e55}
+.header-actions #exportProject {background:#25272b;border-color:#414349;color:#e6e7ea}
+#focusMode {border-color:#383a40}.status-orb {background:#e5a676}
+.ide-layout {gap:8px;padding:8px 10px 8px 0;grid-template-columns:44px 205px minmax(0,1fr) 330px;background:#111214}
+.activity-rail {background:transparent;border:0;padding:6px 3px;gap:12px}
+.rail-btn {width:35px;height:35px;border-radius:7px;font-size:21px;color:#858790}
+.rail-btn.selected {background:#2e2822;color:#f4b584;box-shadow:none}.rail-btn:hover {background:#28292d;color:#f4b584}
+.explorer,.workspace,.assistant {border:1px solid #35363d;border-radius:10px;background:#191a1e;overflow:hidden}
+.pane-heading {height:46px;padding:0 15px;font-size:12px;font-weight:600;letter-spacing:0;color:#d4d5db;border-bottom:1px solid #2d2f34}
+.icon-action {background:transparent;border-color:transparent;color:#9fa1aa;font-size:21px;width:27px;height:27px}
+.project-tree-title {background:transparent;color:#8d909b;padding:17px 13px 8px;border:0;font-size:10px;letter-spacing:.8px}.tree-caret {color:#8a8c95}
+.explorer-search {margin:6px 10px 12px;background:#202125;border-color:#34363d;padding:7px 8px;border-radius:6px}.explorer-search input {font-size:11px}
+.explorer-search:focus-within {border-color:#c48f67;box-shadow:none}.search-hint {display:none}
+.file-row {border-radius:5px;padding:8px 9px;margin:2px 0;font-size:12px;gap:8px}.file-row:hover {background:#26272c}
+.file-row.selected {background:#303136!important;box-shadow:none;color:#f2f2f5}.file-row .file-icon {color:#e9ad7b}
+.explorer-footer {background:transparent;border-color:#303238;padding:13px;font-size:11px;color:#c3c5cb}.explorer-footer p {font-size:10px;line-height:1.7;color:#8a8d97}
+.editor-tabs {height:45px;min-height:45px;padding-left:6px;background:#202125;border-color:#34363d}
+.editor-tabs>button {padding:0 12px;border-radius:0;color:#9598a2;font-size:11px}
+.editor-tabs>button.active {background:transparent;color:#f5b786;border-bottom:2px solid #e9a474}.editor-tabs>button:hover {background:#2c2e33}
+.file-badge {color:#858893;font-size:10px}.tab-actions button {color:#92959f}.file-status {display:none}
+.open-file-tabs {min-height:37px;background:#18191d;border-color:#2d2f35;padding:0 7px}
+.open-file-tabs button {font-size:11px;padding:10px 13px;color:#9598a2;border-right:1px solid #292b30}
+.open-file-tabs button[aria-selected="true"] {background:#222328;color:#efeff2;border-bottom-color:#f4a66a}
+.open-file-tabs button:focus-visible {outline-color:#f4a66a}
+.editor-surface {background:#191a1e}.editor-surface textarea {font:13px/1.85 'Cascadia Code','Fira Code',Consolas,monospace;padding:24px 20px 24px 0;color:#dbdee7;caret-color:#f4a66a;letter-spacing:0}
+.code-gutter {font:13px/1.85 'Cascadia Code','Fira Code',Consolas,monospace;color:#5d616d;min-width:53px;padding:24px 14px 24px 10px}
+.editor-surface textarea::selection {background:#77583e88}
+.workspace-footer {height:54px;background:#1e1f23;border-color:#32343b;padding:0 12px}.workspace-footer>span {font-size:10px;color:#9699a4}
+.workspace-footer button {border-color:#3c3f47;border-radius:6px;font-size:10px;padding:8px 10px;color:#b9bdc7}
+.primary-button,.workspace-footer .primary-button {background:#f4a66a!important;border-color:#f4a66a!important;color:#292016!important;box-shadow:none;font-weight:650}
+.primary-button:hover,.workspace-footer .primary-button:hover {background:#ffc295!important}.secondary-button {background:#292b30}
+.diagnostics {background:#1c1d21;border-color:#32343b}.diagnostics summary {font-size:10px;color:#9397a1}
+.preview-surface {background:#191a1e}.preview-toolbar {background:#202125;border-color:#34363d;color:#b8bbc5;font-size:11px}.preview-badge {font-size:9px;color:#888c96;border:1px solid #42454d;border-radius:4px;padding:2px 5px;margin-left:8px}
+.assistant-heading {height:60px;background:transparent;border-color:#32343b;padding:0 16px}.assistant-heading strong {font-size:13px}.assistant-heading small {font-size:10px;color:#8a8e99}
+.assistant-icon {width:32px;height:32px;border-radius:8px;background:#342a23;border:1px solid #5b4332;color:#f4b584;font-size:23px;box-shadow:none}
+.model-strip {background:#1c1d21;padding:11px 14px;border-color:#303239}.micro-label {font-size:8px;color:#7f838f;letter-spacing:1px}
+.model-strip strong {font-size:11px;color:#bfc2cb}.model-strip button {border-color:#3d4048;background:#282a30;color:#c5c8d0;border-radius:6px;font-size:10px;padding:7px 9px}
+.chat-log {background:transparent;padding:18px 17px}.welcome {padding:20px 0}.welcome-brand {font-size:8px;letter-spacing:1.5px;gap:10px;color:#b4a190;margin-bottom:22px}
+.welcome-brand .sparkle {width:34px;height:34px;background:#332a23;border:1px solid #554234;border-radius:10px;color:#f4b584;font-size:23px;box-shadow:none}
+.welcome h2 {font-size:29px;line-height:1.2;letter-spacing:-1px;color:#efeff2}.welcome h2 em {background:none;color:#f2b181}
+.welcome p {font-size:12px;line-height:1.8;color:#9397a3}.welcome-divider {background:#33353c;margin:25px 0 19px}.welcome-caption {font-size:9px;color:#777d89;letter-spacing:1px}
+.suggestions {gap:8px}.suggestions button {background:#222429;border-color:#353840;border-radius:7px;font-size:11px;padding:11px 10px;color:#c3c7d1}.suggestions button:hover {background:#2d2b29;border-color:#856044}
+.suggestions button span:first-child {color:#e2a776;font-size:16px}.suggestions button span:last-child {color:#797e8a}
+.chat-compose {margin:0 10px 10px;padding:12px;background:#24262b;border:1px solid #44474f;border-radius:10px}.chat-compose textarea {background:transparent;border:0;border-radius:0;min-height:74px;margin:8px 0;resize:vertical;padding:3px;color:#e6e8ee;font-size:12px}.chat-compose textarea:focus {box-shadow:none;outline:1px solid #a97d5b}
+.compose-topline label {font-size:8px;color:#969ba7;letter-spacing:1px}.compose-topline>span {font-size:9px;color:#757b87}.compose-actions button {font-size:11px;padding:9px 8px;border-radius:6px}
+.compose-actions .outline-accent {background:#32343b;border-color:#555963;color:#e0e3ea}.compose-actions .outline-accent:hover {background:#414047}
+.chat-compose small {font-size:9px;color:#8c929e}.bubble.user {background:#383029;border-color:#705039}.bubble.ai {background:#26282e;border-color:#40434c}.bubble strong {color:#f4b584}
+.statusbar {height:25px;background:#151618;border-color:#2b2d32;color:#858b98;font-size:9px}.status-branch {color:#aaafb9}.status-sync {color:#7dbd9c}.status-shortcut {color:#777d88}
+@media(min-width:801px){.workspace.split-mode .editor-surface,.workspace.split-mode .preview-surface {height:calc(100% - 45px - 37px - 54px)}}
+@media(max-width:1250px){.ide-layout{grid-template-columns:40px 175px minmax(0,1fr) 290px}.command-search{max-width:220px}.brand-edition,.local-tag{display:none}.topbar{gap:12px;padding:0 12px}.header-actions #newProject{display:none}}
+@media(max-width:1050px){.project-pill{display:none}.ide-layout{grid-template-columns:38px 155px minmax(0,1fr) 270px}.welcome h2{font-size:26px}.header-actions button{padding:8px}.file-badge{display:none}}
+@media(max-width:800px){.topbar{height:54px}.command-search{max-width:240px;min-width:80px}.command-search kbd{display:none}.ide-layout{display:block;padding:0 8px 8px}.activity-rail{display:none}.mobile-nav{background:#151618;border-color:#303238;padding:0 12px}.mobile-nav button.active{color:#f4b584;border-color:#f4a66a}.explorer,.workspace,.assistant{height:100%;border-radius:8px}.assistant-heading{height:60px}.chat-log{padding:18px 23px}.welcome{max-width:440px;margin:auto}.workspace.split-mode .editor-surface,.workspace.split-mode .preview-surface{height:auto;flex:1 1 0;min-height:0}.editor-tabs{height:45px}.statusbar{padding:0 12px}}
+@media(max-width:500px){.brand-edition{display:none}.brand strong{font-size:16px}.brand-symbol{width:27px;height:27px}.topbar{gap:10px}.header-actions .header-connect{font-size:10px;padding:7px}.command-search{font-size:0;flex:0 0 30px;min-width:30px;padding:0;justify-content:center;background:transparent;border:0;margin-left:auto;margin-right:0}.command-search>span{font-size:23px}.header-actions{margin-left:0}.workspace-footer>span{max-width:125px}.workspace-footer button{padding:8px 7px}.editor-surface textarea,.code-gutter{font-size:12px}.workspace-footer{padding:0 9px}.status-shortcut{display:none}}
