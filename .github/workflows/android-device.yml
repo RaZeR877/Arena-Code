@@ -34,6 +34,20 @@ jobs:
           arch: x86_64
           disable-animations: true
           script: android/gradlew -p android :app:connectedDebugAndroidTest --no-daemon --max-workers=2 && python3 scripts/verify-android-results.py
+      - name: Surface native test failures
+        if: failure()
+        shell: python
+        run: |
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          reports=list(Path('android/app/build/outputs/androidTest-results').rglob('TEST-*.xml'))
+          if not reports: print('::error::No native result XML was produced; inspect the emulator/build step.')
+          for report in reports:
+            root=ET.parse(report).getroot()
+            for node in list(root.iter('failure'))+list(root.iter('error')):
+              message=(node.get('message','')+' '+(node.text or ''))[:6500]
+              message=message.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+              print('::error title=Android instrumentation failure::'+message)
       - uses: actions/upload-artifact@v4
         if: always()
         with:
