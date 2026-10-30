@@ -1,0 +1,7 @@
+{
+  "appId": "dev.vynqode.ide",
+  "appName": "Vynqode",
+  "webDir": "dist/pages",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": false, "backgroundColor": "#191a1e" }
+}

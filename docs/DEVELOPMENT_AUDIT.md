@@ -30,3 +30,8 @@ Provider credentials remain in the Node process/environment. Session credential 
 - Real AI providers, WebGPU inference, Docker isolation, hosted PostgreSQL and production deployment were not exercised. A browser smoke test is not a full accessibility audit.
 
 Tabs and cursor state are session-local and are not added to the persisted project schema. Tab closing/reordering, full syntax highlighting, autocomplete, integrated terminal and debugger remain unfinished.
+
+
+## Follow-up: editor and Android foundation
+
+The active UI now integrates optional bundled Monaco, an IndexedDB project/snapshot library, draft recovery, line-level AI diffs with context/syntax evidence, and approved Node tests with failure output that can populate a repair prompt. Android debug packaging and native ZIP sharing are added; see ANDROID.md for build steps and unverified device behavior. A parity regression test guards the still-duplicated browser core/AI modules, and the root dependency lockfile is committed. The fixture validator now requests TAP explicitly. The original audit table describes findings at its baseline commit; full autonomous repair, PTY terminal, debugger integration, real inference and native device validation remain unfinished.

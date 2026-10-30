@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b1020">
   <meta name="description" content="Vynqode — a focused, local-first coding IDE with a file explorer, live preview, and optional on-device AI coding assistant.">
   <title>Vynqode — AI Coding IDE</title>
@@ -17,7 +17,7 @@
       <div class="project-pill" title="Click to rename your project"><span class="breadcrumb-root">Workspace</span><span class="breadcrumb-separator">/</span><button id="projectName" aria-label="Rename current project">Untitled project</button><span class="local-tag">ON DEVICE</span></div>
       <button id="quickOpen" class="command-search" title="Quick open file (Ctrl+P)"><span aria-hidden="true">⌕</span> Find a file… <kbd>Ctrl P</kbd></button>
       <div class="header-actions"><button id="headerConnectAI" class="header-connect" title="Select AI model or set up a local API key"><span class="status-orb"></span> Connect AI</button><button id="focusMode" title="Toggle focus mode (hide sidebar and assistant)">◫ Focus</button>
-        <button id="newProject" title="New project">＋ New</button>
+        <button id="openProjects" title="Saved projects and recovery snapshots">Projects</button><button id="newProject" title="New project">＋ New</button>
         <button id="importProject" title="Import a ZIP, JSON or text files">Import</button>
         <button id="exportProject" title="Download project ZIP">Export <span class="key-cap">ZIP</span></button>
         <span class="top-divider"></span>
@@ -42,11 +42,11 @@
         <div class="explorer-footer"><span class="explorer-dot"></span> Local project files<p>Export a ZIP for backup. With a cloud API, selected source context is sent to your provider.</p></div>
       </aside>
       <main class="workspace" id="editorPanel">
-        <div class="editor-tabs" role="tablist" aria-label="Editor mode"><button id="editorTab" role="tab" aria-selected="true" class="active">⌘ &nbsp; Code</button><button id="previewTab" role="tab" aria-selected="false">◫ &nbsp; Preview</button><button id="splitTab" role="tab" aria-selected="false" title="Editor alongside preview">▥ &nbsp; Split</button><span id="fileBadge" class="file-badge">index.html</span><span class="file-status"><span class="file-status-dot"></span> Saved locally</span><div class="tab-actions"><button id="renameFile" title="Rename selected file">Rename</button><button id="deleteFile" title="Delete selected file">Delete</button></div></div>
+        <div class="editor-tabs" role="tablist" aria-label="Editor mode"><button id="editorTab" role="tab" aria-selected="true" class="active">⌘ &nbsp; Code</button><button id="previewTab" role="tab" aria-selected="false">◫ &nbsp; Preview</button><button id="splitTab" role="tab" aria-selected="false" title="Editor alongside preview">▥ &nbsp; Split</button><span id="fileBadge" class="file-badge">index.html</span><span class="file-status"><span class="file-status-dot"></span> Saved locally</span><div class="tab-actions"><button id="toggleSmartEditor" aria-pressed="false" title="Syntax highlighting, completion and diagnostics with bundled Monaco">Smart editor</button><button id="renameFile" title="Rename selected file">Rename</button><button id="deleteFile" title="Delete selected file">Delete</button></div></div>
         <div id="openFileTabs" class="open-file-tabs" role="tablist" aria-label="Open files"></div>
-        <div class="editor-surface" id="editorSurface"><div class="code-gutter" id="lineNumbers" aria-hidden="true">1</div><textarea id="codeEditor" aria-label="Source code editor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off"></textarea></div>
+        <div class="editor-surface" id="editorSurface"><div id="smartEditor" hidden aria-label="Smart code editor"></div><div class="code-gutter" id="lineNumbers" aria-hidden="true">1</div><textarea id="codeEditor" aria-label="Source code editor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off"></textarea></div>
         <div class="preview-surface hidden" id="previewSurface"><div class="preview-toolbar"><span><span class="live-dot"></span> App preview <span class="preview-badge">Sandbox</span></span><button id="refreshPreview">↻ Refresh</button></div><iframe id="previewFrame" title="Running HTML preview" sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer"></iframe></div>
-        <div class="workspace-footer"><span id="statusMessage" role="status">All changes saved on this device</span><div><button id="checkSyntax">Check syntax</button><button id="saveFile" class="secondary-button">Save <span class="key-cap">Ctrl S</span></button><button id="runPreview" class="primary-button">▶ Preview</button></div></div>
+        <div class="workspace-footer"><span id="statusMessage" role="status">All changes saved on this device</span><div><button id="openTests" title="Run approved project tests on the localhost Node backend">Tests</button><button id="checkSyntax">Check syntax</button><button id="saveFile" class="secondary-button">Save <span class="key-cap">Ctrl S</span></button><button id="runPreview" class="primary-button">▶ Preview</button></div></div>
         <details class="diagnostics" id="diagnosticsPanel"><summary>Diagnostics <span id="diagnosticsCount">—</span></summary><pre id="diagnosticsText">Run syntax checks to inspect project files.</pre></details>
       </main>
       <aside class="assistant" id="assistantPanel" aria-label="AI coding assistant">
@@ -83,12 +83,17 @@
       <details class="api-setup"><summary>How do I connect an API?</summary><p>Run the Vynqode Node server locally, set the matching provider key in its environment, restart it, and open <code>http://127.0.0.1:3000</code>. For example, set <code>OPENAI_API_KEY</code> for OpenAI, <code>ANTHROPIC_API_KEY</code> for Claude, or <code>GEMINI_API_KEY</code> for Gemini. GitHub Pages alone cannot securely run paid APIs.</p><a href="https://github.com/RaZeR877/Arena-Code/blob/main/docs/API_PROVIDERS.md" target="_blank" rel="noopener noreferrer">Full provider setup ↗</a></details>
     </div><div class="modal-bottomline">✧ Keys are never committed to GitHub. Provider API usage may incur charges.</div>
   </dialog>
+  <dialog id="testsDialog" class="modal"><div class="modal-header"><h2>Project tests</h2><button id="closeTests" aria-label="Close tests">✕</button></div><p class="library-description">Uses a saved copy on your localhost Node backend. Host tests execute project code as your OS user. Run trusted projects only. Android and static Pages do not include a Node runner.</p><button id="executeTests">Run npm test</button><button id="prepareRepair" disabled>Use failure in AI prompt</button><pre id="testOutput" role="log">Tests have not run.</pre></dialog>
+  <dialog id="projectsDialog" class="modal"><div class="modal-header"><h2>Projects &amp; snapshots</h2><button id="closeProjects" aria-label="Close projects">✕</button></div><p class="library-description">Save a recovery point or switch projects. Snapshots stay on this device. Export ZIPs for external backups.</p><button id="saveSnapshot" class="primary-button">Save current project snapshot</button><p id="libraryStatus" role="status"></p><div id="projectSnapshots"></div></dialog>
   <dialog id="quickOpenDialog" class="modal quick-dialog"><div class="quick-header"><span>⌕</span><input id="quickFileInput" type="search" placeholder="Go to file…" autocomplete="off" aria-label="Find a project file"><button data-close-quick aria-label="Close">✕</button></div><div id="quickFileResults" class="quick-results"></div><div class="quick-foot">Select a file to open it · Escape to dismiss</div></dialog>
   <dialog id="reviewDialog" class="review-modal"><header><h2>Review AI changes</h2><button data-close-review aria-label="Close review">✕</button></header><p id="reviewDescription"></p><div id="reviewFiles"></div><footer><button id="rejectChanges">Reject</button><button id="approveChanges" class="primary-button">Approve changes</button></footer></dialog>
+  <script src="./native-platform.js"></script>
   <script src="./browser-core.js"></script>
   <script src="./model-catalog.js"></script>
   <script src="./ai-workflow.js"></script>
   <script src="./cloud-bridge.js"></script>
+  <script src="./project-library.js"></script>
   <script src="./ide.js"></script>
+  <script src="./smart-editor.js"></script>
 </body>
 </html>

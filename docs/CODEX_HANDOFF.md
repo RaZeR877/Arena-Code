@@ -150,3 +150,7 @@ Update this file and `AGENTS.md` as architectural choices change, and keep major
 See [DEVELOPMENT_AUDIT.md](DEVELOPMENT_AUDIT.md) for verified gaps and test boundaries. The focused UI now has accessible open-file tabs and session-local cursor/scroll restoration. It still uses a textarea; legacy Monaco/debugging/runner features are not integrated. Navigation state is not stored in project data.
 
 The modern workspace styling uses charcoal panels and warm accents, compact chrome, a header file finder, and responsive editor/agent sections. Styles live in `public/workbench.css`; both Node and Pages use the same active shell. This visual update does not integrate the legacy terminal or Monaco editor.
+
+## Android/editor foundations
+
+See [ANDROID.md](ANDROID.md). The active IDE now has an optional bundled Monaco surface, draft recovery, IndexedDB project snapshots, actual line-level AI diffs and visible syntax/context evidence. Its Tests dialog runs approved browser-project snapshots through the existing localhost Node runner and can place actual failure output into a repair prompt. This is user-controlled, not an autonomous repair benchmark. Capacitor supplies an Android debug APK build path and native ZIP sharing. Native device behavior remains unverified; a terminal, Android Node execution and integrated debugger remain unfinished. Browser and Android builds require `npm ci` for bundled assets. Root dependencies are locked. `evaluation/validate-fixtures.cjs` explicitly selects TAP to avoid Node reporter drift.

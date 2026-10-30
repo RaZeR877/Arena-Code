@@ -1,3 +1,7 @@
+## Android and editor development preview
+
+The development branch adds a **Smart editor** toggle (bundled Monaco), **Projects** snapshots, unsaved-draft recovery, line-level AI reviews and approved localhost Node tests. Build a debug Android APK with `npm ci` then `npm run android:debug` after installing JDK 21 and Android SDK 35. See [Android setup and limitations](docs/ANDROID.md). Android does not bundle a Node runtime or securely expose desktop provider credentials. Device testing and release signing remain separate requirements.
+
 # Vynqode IDE v0.14.0
 
 **New in v0.14:** redesigned violet-accented workbench with larger editor typography, improved assistant prompts, focus mode and a clear **Connect AI** entry. In the localhost Node edition, you can paste your OpenAI/Claude/Gemini/etc. API key directly into AI Settings; the key is stored **only in server-process memory** and can be cleared. The GitHub Pages edition deliberately does not accept private API keys. See [API provider setup](docs/API_PROVIDERS.md).

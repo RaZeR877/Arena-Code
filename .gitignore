@@ -21,3 +21,6 @@ public/vendor/
 
 # Static site build artifacts (gh-pages branch holds the published copy)
 dist/
+
+# Generated Capacitor browser bridge
+public/native-platform.js

@@ -6,7 +6,10 @@ on:
     paths:
       - 'pages/**'
       - 'public/**'
-      - 'scripts/build-pages.cjs'
+      - 'scripts/**'
+      - 'package*.json'
+      - 'test/focused-*.py'
+      - 'server.js'
       - 'test/pages-browser.py'
       - 'test/browser-project.test.cjs'
       - 'test/pages.test.cjs'
@@ -28,6 +31,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: npm ci --no-audit --no-fund
       - run: npm run check:pages
       - name: Install Chromium browser for Playwright
         run: |
@@ -35,3 +39,8 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Validate project editing, undo, preview, ZIP and mock AI approvals
         run: python test/pages-browser.py
+
+      - name: Validate smart editor and storage recovery
+        run: python test/focused-browser.py
+      - name: Validate approved Node tests and repair context
+        run: python test/focused-runner-browser.py

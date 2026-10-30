@@ -17,7 +17,7 @@ for (const id of fixtures) {
   if (pkg.scripts?.test !== 'node --test') throw new Error(`${id}: contract runner must be node --test.`);
   const src = path.join(dir, 'src');
   if (!fs.existsSync(src) || !fs.readdirSync(src).some(name => fs.statSync(path.join(src, name)).isFile())) throw new Error(`${id}: expected source files are missing.`);
-  const output = spawnSync(process.execPath, ['--test', 'test/contract.test.cjs'], { cwd: dir, encoding: 'utf8', timeout: 10000, maxBuffer: 2 * 1024 * 1024 });
+  const output = spawnSync(process.execPath, ['--test', '--test-reporter=tap', 'test/contract.test.cjs'], { cwd: dir, encoding: 'utf8', timeout: 10000, maxBuffer: 2 * 1024 * 1024 });
   const text = `${output.stdout || ''}\n${output.stderr || ''}`;
   if (output.error) throw new Error(`${id}: fixture process failed to start: ${output.error.message}`);
   if (output.status !== 1 || !/not ok \d/.test(text) || !/# fail [1-9]\d*/.test(text) || /Cannot find module|SyntaxError:|ERR_MODULE_NOT_FOUND/.test(text)) throw new Error(`${id}: expected real assertion failures before repair; got exit ${output.status}.\n${text.slice(-2000)}`);

@@ -111,6 +111,8 @@ try:
     page.locator('#proposeEdits').click()
     page.locator('#reviewDialog[open]').wait_for(timeout=10000)
     assert page.evaluate('window.vynqodeMockCalls')==2
+    assert page.locator('#reviewDialog .line-diff').count()==1
+    assert 'Syntax:' in page.locator('#reviewDescription').inner_text()
     assert page.locator('#fileList [data-file="new.js"]').count()==0
     page.locator('#approveChanges').click()
     page.locator('#fileList [data-file="new.js"]').wait_for(timeout=5000)

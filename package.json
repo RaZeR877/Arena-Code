@@ -8,26 +8,36 @@
     "test:ui": "python3 test/pages-browser.py",
     "eval": "node evaluation/run.cjs",
     "eval:dry": "node evaluation/run.cjs --dry-run",
-    "check": "node --check scripts/copy-monaco.cjs && node --check test/fixtures/fake-docker.cjs && node --check server.js && node --check zip-utils.cjs && node --check public/app.js && node --check public/studio.js && node --check public/model-catalog.js && node --check public/templates.js && node --check public/workspace.js && node --check public/editor.js && node --check hosted/hosted.cjs && node --check runner/worker.cjs && node --check evaluation/run.cjs && node --check evaluation/validate-fixtures.cjs && node --check test/api.test.cjs && node --check test/runner.test.cjs && node --check test/fixtures/fake-docker.cjs && node --check test/hosted.test.cjs && node --check test-studio.cjs && node --check runner/preview.cjs && node --check scripts/verify-runner-e2e.cjs && node --check test/preview.test.cjs && node --check test/hosted-preview.test.cjs && node --check project-checkpoints.cjs && node --check runner/preview-stream.cjs && node --check test/preview-stream.test.cjs && node --check public/ide.js && node --check public/browser-core.js && node --check public/ai-workflow.js && node --check ai-providers.cjs && node --check public/cloud-bridge.js",
+    "check": "node --check scripts/copy-monaco.cjs && node --check test/fixtures/fake-docker.cjs && node --check server.js && node --check zip-utils.cjs && node --check public/app.js && node --check public/studio.js && node --check public/model-catalog.js && node --check public/templates.js && node --check public/workspace.js && node --check public/editor.js && node --check hosted/hosted.cjs && node --check runner/worker.cjs && node --check evaluation/run.cjs && node --check evaluation/validate-fixtures.cjs && node --check test/api.test.cjs && node --check test/runner.test.cjs && node --check test/fixtures/fake-docker.cjs && node --check test/hosted.test.cjs && node --check test-studio.cjs && node --check runner/preview.cjs && node --check scripts/verify-runner-e2e.cjs && node --check test/preview.test.cjs && node --check test/hosted-preview.test.cjs && node --check project-checkpoints.cjs && node --check runner/preview-stream.cjs && node --check test/preview-stream.test.cjs && node --check public/ide.js && node --check public/browser-core.js && node --check public/ai-workflow.js && node --check ai-providers.cjs && node --check public/cloud-bridge.js && node --check public/smart-editor.js && node --check public/project-library.js",
     "ci": "npm run check && npm run check:pages && npm test && npm run eval:fixtures && npm run eval:dry",
-    "postinstall": "node scripts/copy-monaco.cjs",
+    "postinstall": "node scripts/copy-monaco.cjs && node scripts/build-native.cjs",
     "eval:fixtures": "node evaluation/validate-fixtures.cjs",
     "test:runner-e2e": "node scripts/verify-runner-e2e.cjs",
     "test:browser:agent": "python3 test/browser_workflow.py",
     "build:pages": "node scripts/build-pages.cjs",
     "check:pages": "node --check scripts/build-pages.cjs && node --check public/ide.js && node --check public/cloud-bridge.js && node --check pages/browser-core.js && node --check public/model-catalog.js && node --check pages/ai-workflow.js && node --test test/pages.test.cjs test/browser-project.test.cjs test/ai-upgrade.test.cjs",
     "test:browser:pages": "python3 test/pages-browser.py",
-    "test:ui:ide": "python3 test/pages-browser.py"
+    "test:ui:ide": "python3 test/pages-browser.py",
+    "android:sync": "npm run build:pages && cap sync android",
+    "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
+    "android:open": "cap open android"
   },
-  "description": "Vynqode IDE \u2014 polished developer workbench and localhost-only session API key setup",
+  "description": "Vynqode IDE — polished developer workbench and localhost-only session API key setup",
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
-    "pg": "^8.16.3",
-    "monaco-editor": "^0.52.2"
+    "@capacitor/android": "7.6.10",
+    "@capacitor/core": "7.6.10",
+    "@capacitor/filesystem": "7.1.9",
+    "@capacitor/share": "7.0.4",
+    "diff": "8.0.2",
+    "monaco-editor": "^0.52.2",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.0"
+    "@capacitor/cli": "7.6.10",
+    "@playwright/test": "^1.55.0",
+    "esbuild": "0.25.12"
   }
 }
