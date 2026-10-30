@@ -185,3 +185,13 @@ body.focus-mode .editor-surface textarea {font-size:15px}
 
 .api-static-setup a {color:#c8baff;text-decoration:underline;text-underline-offset:3px}
 .api-model-controls {margin-top:14px}
+
+/* Open files remain reachable on narrow screens without widening the workspace. */
+.open-file-tabs {display:flex;flex-shrink:0;gap:2px;overflow-x:auto;min-height:38px;padding:0 10px;background:#101824;border-bottom:1px solid #293447}
+.open-file-tabs button {flex:0 0 auto;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:9px 14px;border-radius:0;color:#98a8c0;font-size:12px;border-bottom:2px solid transparent}
+.open-file-tabs button[aria-selected="true"] {background:#1b2034;color:#e9e4ff;border-bottom-color:#ad9bff}
+.open-file-tabs button:focus-visible {outline:2px solid #b9adff;outline-offset:-3px}
+.workspace.split-mode .open-file-tabs {width:100%}
+@media(min-width:761px) {
+  .workspace.split-mode .editor-surface,.workspace.split-mode .preview-surface {height:calc(100% - 54px - 38px - 56px)}
+}

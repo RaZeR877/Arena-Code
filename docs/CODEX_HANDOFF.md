@@ -144,3 +144,7 @@ A feature is **done** only when:
 ## 10. Maintaining the handoff
 
 Update this file and `AGENTS.md` as architectural choices change, and keep major assumptions actionable and concise. Never add private credentials, sensitive user information, personal chat history, or unverified claims to this **public repository**.
+
+## First development audit follow-up
+
+See [DEVELOPMENT_AUDIT.md](DEVELOPMENT_AUDIT.md) for verified gaps and test boundaries. The focused UI now has accessible open-file tabs and session-local cursor/scroll restoration. It still uses a textarea; legacy Monaco/debugging/runner features are not integrated. Navigation state is not stored in project data.

@@ -10,7 +10,7 @@
   if (!core || !workflow || !catalog) throw Error('Vynqode project and AI modules are missing');
   const KEY = 'vynqode-project-v1', BACKUP = 'vynqode-undo-v1', LEGACY = 'arena-pages-workspace-v1';
   const $ = id => document.getElementById(id);
-  const state = { project:null, current:'index.html', dirty:false, view:'editor', busy:false, engine:null, model:null, module:null, models:[], proposal:null, frameNonce:null, source:'browser', mobileSection:'editor', providers:[], engineMode:'local' };
+  const state = { project:null, current:'index.html', dirty:false, view:'editor', busy:false, engine:null, model:null, module:null, models:[], proposal:null, frameNonce:null, source:'browser', mobileSection:'editor', providers:[], engineMode:'local', openFiles:[], positions:new Map() };
   const enc = val => String(val ?? '');
   const sleep = n => new Promise(r => setTimeout(r, n));
   function note(message, error=false) { $('statusMessage').textContent=enc(message); $('statusMessage').dataset.error=String(error); }
@@ -48,16 +48,33 @@
     const next=core.normalize(project);
     try { localStorage.setItem(BACKUP,JSON.stringify(state.project)); persist(next); }
     catch(e) {note('Could not replace project: '+e.message,true);return false;}
-    state.project=next;state.current=Object.hasOwn(next.files,'index.html')?'index.html':Object.keys(next.files)[0]||null;
+    state.openFiles=[];state.positions.clear();state.project=next;state.current=Object.hasOwn(next.files,'index.html')?'index.html':Object.keys(next.files)[0]||null;
     state.dirty=false;setView('editor');render();note(label||'Project opened');return true;
   }
   function saveOpen() {
     if (!state.current || !state.dirty) return true;
+    rememberPosition();
     const content=$('codeEditor').value;
     if (content === state.project.files[state.current]) {state.dirty=false;render();return true;}
     return mutate([{path:state.current,content}],'Saved '+state.current);
   }
   function pathIcon(path){return /\.html?$/i.test(path)?'◇':/\.css$/i.test(path)?'◫':/\.[cm]?jsx?$/i.test(path)?'JS':/\.tsx?$/i.test(path)?'TS':/\.json$/i.test(path)?'{}':'◈';}
+  function rememberPosition() {
+    if (!state.current) return;
+    const editor=$('codeEditor');
+    state.positions.set(state.current,{start:editor.selectionStart,end:editor.selectionEnd,top:editor.scrollTop,left:editor.scrollLeft});
+  }
+  function renderFileTabs() {
+    state.openFiles=state.openFiles.filter(path=>Object.hasOwn(state.project.files,path));
+    if(state.current&&!state.openFiles.includes(state.current))state.openFiles.push(state.current);
+    const tabs=$('openFileTabs');tabs.textContent='';
+    for(const path of state.openFiles){
+      const tab=document.createElement('button');tab.type='button';tab.role='tab';tab.dataset.path=path;
+      tab.textContent=path;tab.title=path;tab.setAttribute('aria-controls','editorSurface');
+      tab.setAttribute('aria-selected',String(path===state.current));tab.tabIndex=path===state.current?0:-1;
+      tabs.append(tab);
+    }
+  }
   function render() {
     $('projectName').textContent=state.project.name;
     $('treeProjectName').textContent=state.project.name.toUpperCase();
@@ -73,10 +90,15 @@
     $('codeEditor').disabled=!state.current;
     $('codeEditor').value=state.current?state.project.files[state.current]:'';
     $('fileBadge').textContent=state.current||'No file';
-    state.dirty=false;updateGutter();
+    state.dirty=false;updateGutter();renderFileTabs();
+    const position=state.positions.get(state.current);
+    const editor=$('codeEditor');
+    editor.setSelectionRange(position?.start||0,position?.end||0);
+    editor.scrollTop=position?.top||0;editor.scrollLeft=position?.left||0;
+    $('lineNumbers').scrollTop=editor.scrollTop;
   }
   function updateGutter(){const value=$('codeEditor').value;$('lineNumbers').textContent=Array.from({length:Math.max(1,value.split('\n').length)},(_,i)=>i+1).join('\n');}
-  function switchFile(path) {if (state.dirty&&!saveOpen()) return;state.current=path;render();setView('editor');}
+  function switchFile(path) {rememberPosition();if (state.dirty&&!saveOpen()) return;state.current=path;render();setView('editor');}
   function createFile(){if(state.dirty&&!saveOpen())return;const path=prompt('New file path (e.g. src/components/button.js):');if(path===null)return;try{core.safePath(path);if(Object.hasOwn(state.project.files,path))throw Error('File already exists');mutate([{path,content:''}],'Created '+path,path);}catch(e){note(e.message,true);}}
   function renameFile(){if(!state.current)return;const before=state.current;const after=prompt('Rename file:',before);if(after===null||after===before)return;try{core.safePath(after);if(Object.hasOwn(state.project.files,after))throw Error('Destination exists');if(state.dirty&&!saveOpen())return;mutate([{path:before,delete:true},{path:after,content:state.project.files[before]}],'Renamed '+before,after);}catch(e){note(e.message,true);}}
   function deleteFile(){if(!state.current||!confirm('Delete '+state.current+'? You can undo this change.'))return;state.dirty=false;mutate([{path:state.current,delete:true}],'File deleted');}
@@ -294,6 +316,17 @@
   async function checkGPU(){try{const adapter=await navigator.gpu?.requestAdapter();$('gpuStatus').textContent=adapter?'✓ WebGPU adapter detected':'WebGPU unavailable in this browser or device';}catch(e){$('gpuStatus').textContent='WebGPU request failed: '+e.message;}}
   function mobileSection(section){document.querySelector('.ide-layout').dataset.section=section;state.mobileSection=section;document.querySelectorAll('[data-section]').forEach(x=>x.classList.toggle('active',x.dataset.section===section));}
   function wire(){
+    window.addEventListener('beforeunload',event=>{if(state.dirty){event.preventDefault();event.returnValue='';}});
+    $('openFileTabs').onclick=event=>{const tab=event.target.closest('button[data-path]');if(tab)switchFile(tab.dataset.path);};
+    $('openFileTabs').onkeydown=event=>{
+      if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+      const index=state.openFiles.indexOf(state.current),count=state.openFiles.length;
+      if(!count)return;
+      event.preventDefault();
+      const next=event.key==='Home'?0:event.key==='End'?count-1:(index+(event.key==='ArrowRight'?1:-1)+count)%count;
+      switchFile(state.openFiles[next]);
+      $('openFileTabs').querySelector('[aria-selected="true"]')?.focus();
+    };
     $('fileList').onclick=e=>{const row=e.target.closest('button[data-file]');if(row)switchFile(row.dataset.file);};
     $('codeEditor').addEventListener('input',()=>{state.dirty=true;$('fileBadge').textContent=(state.current||'')+' •';updateGutter();});
     $('codeEditor').addEventListener('scroll',()=>{$('lineNumbers').scrollTop=$('codeEditor').scrollTop;});

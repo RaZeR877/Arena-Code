@@ -2,7 +2,7 @@
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright, Error as BrowserError
-import functools, os, threading
+import functools, os, threading, re
 ROOT=Path(__file__).resolve().parents[1]/'dist'/'pages'
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self,*args): pass
@@ -42,6 +42,7 @@ try:
     # All cloud providers are visible, but the public static site never accepts raw API keys.
     page.locator('#configureModel').click()
     page.locator('#apiEngineTab').click()
+    page.locator('#apiStaticSetup').wait_for(state='visible',timeout=5000)
     assert page.locator('#apiProvider option').count()==8
     assert page.locator('#apiKeySetup').is_hidden()
     assert page.locator('#apiStaticSetup').is_visible()
@@ -53,6 +54,24 @@ try:
     assert page.locator('#assistantPanel').is_hidden()
     page.locator('#focusMode').click()
     assert page.locator('#assistantPanel').is_visible()
+    # Open-file tabs preserve selection and unsaved text across navigation.
+    page.locator('#codeEditor').evaluate('(e)=>e.setSelectionRange(25,31)')
+    page.locator('[data-file="app.js"]').click()
+    tab_content='const savedFromTab = 1;'+'\n'*100
+    page.locator('#codeEditor').fill(tab_content)
+    page.locator('#codeEditor').evaluate('(e)=>{e.scrollTop=200}')
+    assert page.evaluate("!window.dispatchEvent(new Event('beforeunload',{cancelable:true}))")
+    page.locator('#openFileTabs button',has_text='index.html').click()
+    assert page.locator('#codeEditor').evaluate('(e)=>[e.selectionStart,e.selectionEnd]')==[25,31]
+    page.locator('#openFileTabs button',has_text='app.js').click()
+    assert page.locator('#codeEditor').input_value()==tab_content
+    assert page.locator('#codeEditor').evaluate('(e)=>e.scrollTop')>0
+    assert page.evaluate("window.dispatchEvent(new Event('beforeunload',{cancelable:true}))")
+    page.locator('#openFileTabs [aria-selected="true"]').press('Home')
+    assert page.locator('#openFileTabs [aria-selected="true"]').inner_text()=='index.html'
+    page.locator('#openFileTabs [aria-selected="true"]').press('End')
+    assert page.locator('#openFileTabs [aria-selected="true"]').inner_text()=='app.js'
+    page.locator('#undoChange').click()
     # Functional quick-open, file filtering, and simultaneous editor/preview.
     page.locator('#quickOpen').click()
     page.locator('#quickFileInput').fill('style')
@@ -71,9 +90,15 @@ try:
     assert 'syntax issues found' in page.locator('#statusMessage').inner_text()
     page.locator('#undoChange').click()
     assert 'document.querySelector' in page.locator('#codeEditor').input_value()
-    page.locator('#runPreview').click()
+    # Wait for the new srcdoc document, rather than clicking the previous split preview.
+    with page.expect_event('framenavigated',predicate=lambda frame: frame.parent_frame is not None):
+      page.locator('#runPreview').click()
     preview=page.frame_locator('#previewFrame')
     preview.locator('#action').wait_for(timeout=5000)
+    marker=re.search(r'const token=([^;]+);',page.locator('#previewFrame').get_attribute('srcdoc')).group(0)
+    frame=page.locator('#previewFrame').element_handle().content_frame()
+    frame.wait_for_function('(marker)=>document.documentElement.innerHTML.includes(marker)',arg=marker)
+    preview.locator('body').evaluate("async () => { if (document.readyState !== 'complete') await new Promise(resolve => window.addEventListener('load', resolve, {once:true})); }")
     preview.locator('#action').click(timeout=5000)
     preview.get_by_text('You are building something great!').wait_for(timeout=5000)
     page.locator('#editorTab').click()
@@ -91,6 +116,7 @@ try:
     page.locator('#fileList [data-file="new.js"]').wait_for(timeout=5000)
     page.locator('#undoChange').click()
     assert page.locator('#fileList [data-file="new.js"]').count()==0
+    page.screenshot(path=str(desktop),full_page=False)
     with page.expect_download(timeout=8000) as d:
        page.locator('#exportProject').click()
     assert d.value.suggested_filename.endswith('.zip')
@@ -99,8 +125,11 @@ try:
     assert page.locator('#assistantPanel').is_visible()
     page.locator('[data-section="editor"]').click()
     assert page.locator('#editorPanel').is_visible()
+    assert page.locator('#openFileTabs').is_visible()
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     if not used_fallback:
       page.reload();page.locator('[data-section="files"]').click();page.locator('#fileList .file-row').first.wait_for(timeout=5000)
+    page.locator('[data-section="editor"]').click()
     screenshot=ROOT.parents[1]/'test-results'/'vynqode-ide-preview.png'
     screenshot.parent.mkdir(exist_ok=True,parents=True)
     page.screenshot(path=str(screenshot),full_page=False)
