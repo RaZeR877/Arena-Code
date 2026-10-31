@@ -62,7 +62,7 @@ try:
   assert page.evaluate('window.deviceSaves')==0
   page.locator('#closeProjects').click()
   page.set_viewport_size({'width':390,'height':844});page.locator('button[data-section="editor"]').click();page.locator('#codeEditor').focus()
-  page.locator('[data-insert="{}"]').click();assert '{}' in page.locator('#codeEditor').input_value()
+  page.locator('#phoneMore').click();page.locator('[data-phone-insert="{}"]').click();assert '{}' in page.locator('#codeEditor').input_value()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   assert not errors,errors
   print('QuickJS isolation/assertions/timeout, project search, offline Git commits, mock native provider, resumed review and mobile editing PASS')

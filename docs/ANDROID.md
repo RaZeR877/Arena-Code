@@ -18,8 +18,10 @@ Output: `android/app/build/outputs/apk/debug/app-debug.apk`. Install on a test d
 
 ## Capabilities and limits
 
+See [PHONE_WORKBENCH.md](PHONE_WORKBENCH.md) for the current touch editor, save/recovery behavior and validation. Phones now default to CodeMirror; desktop Monaco remains optional.
+
 - Browser-local project editing, syntax checks, sandboxed HTML preview, undo and project snapshots are bundled.
-- Smart editor is an explicit toggle: bundled Monaco provides highlighting, find/replace, completion and language-worker diagnostics. The simple editor remains available on phones. Monaco itself does not run programs.
+- Smart editor is an explicit toggle: bundled Monaco provides highlighting, find/replace, completion and language-worker diagnostics. The touch editor is the phone default; the textarea remains a persistence adapter and desktop fallback. Monaco itself does not run programs.
 - Unsaved text is backed up after a short debounce and when the page is hidden. Recovery applies only when the saved base project is unchanged. Save and export remain necessary; clearing app data or uninstalling removes local work.
 - **Projects** saves up to 25 named/time-stamped IndexedDB snapshots. Open switches to a snapshot; remove deletes only that snapshot. Export ZIPs for off-device backups.
 - Native ZIP export writes to the app cache and opens Android's share sheet. Cache files are temporary, not durable backups. Choose a destination that retains the ZIP.

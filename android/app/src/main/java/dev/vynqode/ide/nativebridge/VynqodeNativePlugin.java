@@ -100,7 +100,16 @@ public final class VynqodeNativePlugin extends Plugin {
     @PluginMethod public void reopenFolder(PluginCall call){execute(call,()->folders.reopen());}
     @PluginMethod public void saveFolder(PluginCall call){
         JSObject files=call.getObject("files");String id=call.getString("id");
-        getActivity().runOnUiThread(()->new AlertDialog.Builder(getContext()).setTitle("Save project to device folder?").setMessage("Changed files will be written and files deleted in your editor will be removed. External changes cause a conflict. A private native recovery copy is kept; document providers do not guarantee atomic multi-file writes.").setPositiveButton("Save changes",(d,w)->execute(call,()->folders.save(id,files))).setNegativeButton("Cancel",(d,w)->call.reject("Save cancelled")).setOnCancelListener(d->call.reject("Save cancelled")).show());
+        try{io.execute(()->{
+            try{
+                JSONArray removed=folders.removedPaths(id,files);
+                if(removed.length()==0){execute(call,()->folders.save(id,files,false));return;}
+                getActivity().runOnUiThread(()->new AlertDialog.Builder(getContext()).setTitle("Delete "+removed.length()+" device files?")
+                    .setMessage("Your editor removed these managed files: "+removed.toString()+". Changed files will also be saved. A private recovery copy is retained; external changes cause a conflict.")
+                    .setPositiveButton("Save and delete",(dialog,which)->execute(call,()->folders.save(id,files)))
+                    .setNegativeButton("Cancel",(dialog,which)->call.reject("Save cancelled")).setOnCancelListener(dialog->call.reject("Save cancelled")).show());
+            }catch(Exception error){call.reject("Reopen the device folder before saving. Check its permission.");}
+        });}catch(RejectedExecutionException error){call.reject("Native operations are busy. Try again shortly.");}
     }
     @PluginMethod public void gitRequest(PluginCall call){
         String raw=call.getString("url"),method=call.getString("method","GET");

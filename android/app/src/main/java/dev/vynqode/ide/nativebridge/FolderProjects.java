@@ -95,10 +95,17 @@ public final class FolderProjects {
         DocumentFile file=directory.createFile(mime==null?"application/octet-stream":mime,parts[parts.length-1]);
         if(file==null||!parts[parts.length-1].equals(file.getName()))throw new IllegalStateException("Document provider could not create the exact filename");return file;
     }
-    public synchronized JSONObject save(String requestedId,JSONObject files)throws Exception{
+    public synchronized JSONArray removedPaths(String requestedId,JSONObject files)throws Exception{
+        if(root==null||id==null||!id.equals(requestedId))throw new IllegalStateException("Reopen the device folder before saving");
+        if(files==null)throw new IllegalArgumentException("Project files are required");
+        JSONArray removed=new JSONArray();for(String path:baseline.keySet())if(!files.has(path))removed.put(path);return removed;
+    }
+    public synchronized JSONObject save(String requestedId,JSONObject files)throws Exception{return save(requestedId,files,true);}
+    public synchronized JSONObject save(String requestedId,JSONObject files,boolean deletionApproved)throws Exception{
         if(root==null||id==null||!id.equals(requestedId))throw new IllegalStateException("Reopen the device folder before saving");
         if(!root.canWrite())throw new IllegalStateException("This folder grant is read-only");
         if(files==null||files.length()>100)throw new IllegalArgumentException("Project exceeds 100 files");
+        if(!deletionApproved&&removedPaths(requestedId,files).length()>0)throw new IllegalStateException("File set changed. Save again to review deletions.");
         Map<String,byte[]> desired=new LinkedHashMap<>();int total=0;
         for(String path:keys(files)){safePath(path);byte[] data=files.getString(path).getBytes(StandardCharsets.UTF_8);total+=data.length;if(data.length>MAX_FILE||total>MAX_TOTAL)throw new IllegalArgumentException("Project exceeds storage limits");desired.put(path,data);}
         List<String> paths=new ArrayList<>(baseline.keySet());for(String path:desired.keySet())if(!paths.contains(path))paths.add(path);

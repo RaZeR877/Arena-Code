@@ -1,6 +1,6 @@
 {
   "name": "vynqode",
-  "version": "0.16.0-dev",
+  "version": "0.17.0-dev",
   "private": true,
   "scripts": {
     "start": "node server.js",
@@ -8,7 +8,7 @@
     "test:ui": "python3 test/pages-browser.py",
     "eval": "node evaluation/run.cjs",
     "eval:dry": "node evaluation/run.cjs --dry-run",
-    "check": "node --check scripts/copy-monaco.cjs && node --check test/fixtures/fake-docker.cjs && node --check server.js && node --check zip-utils.cjs && node --check public/app.js && node --check public/studio.js && node --check public/model-catalog.js && node --check public/templates.js && node --check public/workspace.js && node --check public/editor.js && node --check hosted/hosted.cjs && node --check runner/worker.cjs && node --check evaluation/run.cjs && node --check evaluation/validate-fixtures.cjs && node --check test/api.test.cjs && node --check test/runner.test.cjs && node --check test/fixtures/fake-docker.cjs && node --check test/hosted.test.cjs && node --check test-studio.cjs && node --check runner/preview.cjs && node --check scripts/verify-runner-e2e.cjs && node --check test/preview.test.cjs && node --check test/hosted-preview.test.cjs && node --check project-checkpoints.cjs && node --check runner/preview-stream.cjs && node --check test/preview-stream.test.cjs && node --check public/ide.js && node --check public/browser-core.js && node --check public/ai-workflow.js && node --check ai-providers.cjs && node --check public/cloud-bridge.js && node --check public/smart-editor.js && node --check public/project-library.js && node --check ide-runtime.cjs && node --check public/runtime-tools.js && node --check public/workbench-layout.js && node --check scripts/android-signing.cjs && node --check public/project-index.js && node --check public/workspace-ui.js && node --check public/playground.js && node --check public/git-pack-guard.js && node --check scripts/build-playground.cjs",
+    "check": "node --check scripts/copy-monaco.cjs && node --check test/fixtures/fake-docker.cjs && node --check server.js && node --check zip-utils.cjs && node --check public/app.js && node --check public/studio.js && node --check public/model-catalog.js && node --check public/templates.js && node --check public/workspace.js && node --check public/editor.js && node --check hosted/hosted.cjs && node --check runner/worker.cjs && node --check evaluation/run.cjs && node --check evaluation/validate-fixtures.cjs && node --check test/api.test.cjs && node --check test/runner.test.cjs && node --check test/fixtures/fake-docker.cjs && node --check test/hosted.test.cjs && node --check test-studio.cjs && node --check runner/preview.cjs && node --check scripts/verify-runner-e2e.cjs && node --check test/preview.test.cjs && node --check test/hosted-preview.test.cjs && node --check project-checkpoints.cjs && node --check runner/preview-stream.cjs && node --check test/preview-stream.test.cjs && node --check public/ide.js && node --check public/browser-core.js && node --check public/ai-workflow.js && node --check ai-providers.cjs && node --check public/cloud-bridge.js && node --check public/smart-editor.js && node --check public/project-library.js && node --check ide-runtime.cjs && node --check public/runtime-tools.js && node --check public/workbench-layout.js && node --check scripts/android-signing.cjs && node --check public/project-index.js && node --check public/workspace-ui.js && node --check public/playground.js && node --check public/git-pack-guard.js && node --check scripts/build-playground.cjs && node --check public/phone-workbench.js",
     "ci": "npm run check && npm run check:pages && npm test && npm run eval:fixtures && npm run eval:dry",
     "postinstall": "node scripts/copy-monaco.cjs && node scripts/build-native.cjs && node scripts/build-playground.cjs",
     "eval:fixtures": "node evaluation/validate-fixtures.cjs",
@@ -26,7 +26,8 @@
     "android:device-test": "npm run android:sync && cd android && ./gradlew :app:connectedDebugAndroidTest",
     "test:browser:android-workflow": "npm run build:pages && python3 test/android-workflow-browser.py",
     "android:verify": "python3 scripts/verify-android-release.py",
-    "test:browser:quality": "npm run build:pages && python3 test/git-workflows-browser.py && python3 test/git-transport-browser.py && python3 test/quality-workflows-browser.py"
+    "test:browser:quality": "npm run build:pages && python3 test/git-workflows-browser.py && python3 test/git-transport-browser.py && python3 test/quality-workflows-browser.py",
+    "test:browser:phone": "npm run build:pages && python3 test/phone-editor-browser.py"
   },
   "description": "Vynqode IDE \u2014 polished developer workbench and localhost-only session API key setup",
   "engines": {
@@ -37,6 +38,18 @@
     "@capacitor/core": "7.6.10",
     "@capacitor/filesystem": "7.1.9",
     "@capacitor/share": "7.0.4",
+    "@codemirror/autocomplete": "6.20.4",
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-css": "6.3.1",
+    "@codemirror/lang-html": "6.4.12",
+    "@codemirror/lang-javascript": "6.2.5",
+    "@codemirror/lang-json": "6.0.2",
+    "@codemirror/lang-markdown": "6.5.2",
+    "@codemirror/lang-python": "6.2.1",
+    "@codemirror/language": "6.13.1",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/theme-one-dark": "6.1.3",
+    "@codemirror/view": "6.43.15",
     "@isomorphic-git/lightning-fs": "4.10.4",
     "@xterm/addon-fit": "0.11.0",
     "@xterm/xterm": "6.0.0",

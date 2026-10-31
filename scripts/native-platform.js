@@ -1,3 +1,4 @@
+import './phone-editor.js';
 import './git-engine.js';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';

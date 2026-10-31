@@ -55,12 +55,12 @@ public class DeviceStorageTest {
             JSONObject desired=new JSONObject().put("app.js","const edited=3;").put("new.js","const added=4;");
             JSONObject conflict=folders.save(opened.getString("id"),desired);assertEquals(1,conflict.getJSONArray("conflicts").length());assertEquals(0,conflict.getJSONArray("written").length());assertFalse(conflict.getBoolean("partial"));
             assertNull(androidx.documentfile.provider.DocumentFile.fromTreeUri(context,selected).findFile("new.js"));
-            opened=folders.open(selected);JSONObject saved=folders.save(opened.getString("id"),desired);assertEquals(0,saved.getJSONArray("conflicts").length());assertEquals(2,saved.getJSONArray("written").length());
+            opened=folders.open(selected);assertEquals(0,folders.removedPaths(opened.getString("id"),desired).length());JSONObject saved=folders.save(opened.getString("id"),desired);assertEquals(0,saved.getJSONArray("conflicts").length());assertEquals(2,saved.getJSONArray("written").length());
             added=DocumentsContract.buildDocumentUriUsingTree(selected,DocumentsContract.getDocumentId(directory)+"/new.js");
             JSONObject reopened=folders.open(selected);assertEquals("const edited=3;",reopened.getJSONObject("project").getJSONObject("files").getString("app.js"));
             assertTrue(androidx.documentfile.provider.DocumentFile.fromTreeUri(context,selected).findFile(".env").exists());
             assertTrue(new java.io.File(isolated.getFilesDir(),"device-recovery").listFiles().length>0);
-            JSONObject removed=folders.save(reopened.getString("id"),new JSONObject().put("app.js","const edited=3;"));assertEquals(1,removed.getJSONArray("written").length());added=null;
+            assertEquals(1,folders.removedPaths(reopened.getString("id"),new JSONObject().put("app.js","const edited=3;")).length());try{folders.save(reopened.getString("id"),new JSONObject().put("app.js","const edited=3;"),false);fail("Unapproved deletion accepted");}catch(IllegalStateException expected){}JSONObject removed=folders.save(reopened.getString("id"),new JSONObject().put("app.js","const edited=3;"));assertEquals(1,removed.getJSONArray("written").length());added=null;
         }finally{
             if(oldTree==null)settings.edit().remove("lastTree").commit();else settings.edit().putString("lastTree",oldTree).commit();
             if(added!=null)DocumentsContract.deleteDocument(context.getContentResolver(),added);

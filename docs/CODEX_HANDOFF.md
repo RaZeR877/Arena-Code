@@ -184,3 +184,12 @@ The active editor adds reviewed literal multi-file replacement with size preflig
 Android Tools exposes an optional fixed-loopback USB companion launch and explicit ZIP round trips. Node/PTY/debugging still execute on the computer; no remote CORS exception or embedded Android Node runtime was added. Native credentials reject invalid header characters without echoing them. Native Git destination/header policy is isolated in GitTransport.java with JVM tests. The new development version is 0.16.0-dev / Android versionCode 3; the release signing identity is pinned and unchanged.
 
 APK verification enforces signature/identity/version/assets/checksums; the signed CI build depends on native tests for the same source and requires both native test classes, not an arbitrary nonzero run. Locally, software API 35 emulation did not become usable, and the API 30 attempt failed installation before any test because its package service was unavailable. Do not mark native or physical-device readiness green. No publication, push or new release has been performed.
+
+
+## Phone editor rebuild — 0.17 development draft
+
+The Android user's review exposed basic usability failures despite green functional browser tests: 25–32px controls, a 65px editor in a short viewport, clipped actions, editor-mode caret jumps/reset, hidden Undo and confusing save destinations. [PHONE_WORKBENCH.md](PHONE_WORKBENCH.md) records the repair and its validation boundaries.
+
+Phones now default to bundled CodeMirror with per-file history, highlighting, completion and a compact touch layout. Monaco remains available through the editor menu. Selection, active file and mode persist; hidden desktop-editor state is not restored during touch saves. Source/draft storage keys remain unchanged. Main Save distinguishes app copies, writable linked folders and read-only grants. Automatic checkpoint retention is separate from manual snapshots and preserves task references. Native deletion confirmation remains; ordinary explicit saves retain preflight/recovery/verification without a redundant confirmation.
+
+Version is 0.17.0-dev / versionCode 4. The debug certificate matches the user's earlier 0.16 test APK. Ten browser workflows, 48 Node tests, 14 Pages checks, eight native JVM tests and both debug APK assemblies passed. Physical Android IME/Back/SAF and installed-upgrade checks remain unfinished; native instrumentation only compiled. A new test APK is local, with no publication or push. Full Replit runtime/deployment capabilities are not implemented.

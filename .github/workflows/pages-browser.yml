@@ -13,6 +13,7 @@ on:
       - 'test/repair-browser.py'
       - 'test/android-workflow-browser.py'
       - 'test/quality-workflows-browser.py'
+      - 'test/phone-editor-browser.py'
       - 'test/git-workflows-browser.py'
       - 'test/git-transport-browser.py'
       - 'ide-runtime.cjs'
@@ -66,3 +67,6 @@ jobs:
         run: python test/git-transport-browser.py
       - name: Validate replacement, diagnostics, settings and functional AI test mechanism
         run: python test/quality-workflows-browser.py
+
+      - name: Validate touch editing, keyboard layout, history and folder-save semantics
+        run: python test/phone-editor-browser.py

@@ -51,6 +51,9 @@ GitHub Pages is built exclusively from `public/index.html`, `public/ide.css`, `p
 
 ### Android workflow draft
 
+The [phone editor rebuild](docs/PHONE_WORKBENCH.md) adds a touch-first code editor, visible undo/redo, compact keyboard layouts, stable selection and clear save destinations. This development APK still needs physical Android keyboard and folder-provider validation.
+
+
 Native credential setup, folder access, offline Git, resumable reviewed edits and isolated JavaScript execution are described in [Android workflows](docs/ANDROID_WORKFLOWS.md). The [quality follow-up](docs/QUALITY_MILESTONE.md) adds branches/pull/conflict recovery, reviewed replacement, cross-file diagnostics, functional AI checks and an optional USB computer companion. This local draft is separate from the previously published RC; native compilation and browser tests do not establish physical-device readiness. ₹0 remains the default; paid AI is optional.
 
 ### Naming/legal note

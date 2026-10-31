@@ -291,3 +291,50 @@ body {padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bo
 #contextDialog{width:min(94vw,760px);max-height:85dvh;overflow:auto;padding:20px;background:#202125;color:#e6e9f0;border:1px solid #4a505b;border-radius:10px}#contextDialog header{display:flex;align-items:center;justify-content:space-between}#contextFiles{display:grid;gap:7px}#contextFiles label{overflow-wrap:anywhere;font:12px/1.6 ui-monospace,monospace}#projectOverview{white-space:pre-wrap;font-size:11px}#agentContext{font-size:11px;color:#c6d0e0;padding:4px 0}
 
 @media(max-width:800px){.app{min-height:0}.editor-tabs{overflow-x:auto}.editor-tabs>button,.tab-actions{flex-shrink:0}}#nativeCompanion code{overflow-wrap:anywhere}#nativeCompanion button{margin:5px}#runFunctionalEval{font-size:11px;color:#c6d0e0;padding:4px 8px}
+
+/* Phone workbench: one editing surface and large, stable touch actions. */
+.phone-only{display:none!important}
+#phoneEditor{width:100%;height:100%;min-height:0;min-width:0;flex:1;overflow:hidden}
+#phoneEditor[hidden]{display:none!important}
+.phone-menu{width:min(94vw,640px);max-height:90dvh;padding:20px;background:#202125;color:#ececef;border:1px solid #4a505b;border-radius:16px;overflow:auto}
+.phone-menu header{display:flex;align-items:center;justify-content:space-between;gap:12px}.phone-menu h2{font-size:20px;margin:0 0 8px}.phone-menu p{font-size:13px;line-height:1.6;color:#b7bfce;overflow-wrap:anywhere}
+.phone-menu header button{width:48px;height:48px;flex-shrink:0;border:1px solid #505866}.phone-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}.phone-menu-grid button{min-height:52px;text-align:left;padding:12px;border:1px solid #505866;font-size:14px}
+@media(max-width:800px),(pointer:coarse) and (max-width:1100px){
+  body{overflow:hidden}.app{height:calc(var(--phone-height,100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom));min-height:0}
+  .topbar{order:0;height:56px;min-height:56px;padding:0 8px;gap:8px;background:#15171c}
+  .brand{width:48px;min-width:48px;height:48px;justify-content:center}.brand strong,.brand-edition{display:none}
+  .project-pill{display:block!important;position:relative;flex:1;min-width:0;margin:0}
+  .project-pill>.breadcrumb-root,.project-pill>.breadcrumb-separator,.project-pill>.local-tag{display:none}
+  #projectName{display:block;width:100%;max-width:none;min-height:48px;padding:0 0 15px;font-size:14px;line-height:22px;text-align:left;overflow:hidden;text-overflow:ellipsis}
+  #phoneSaveStatus{display:block!important;position:absolute;bottom:3px;left:0;font-size:11px;color:#b0bacb;pointer-events:none;white-space:nowrap}
+  .command-search,.header-actions>*{display:none!important}.header-actions{gap:0;margin:0}
+  .header-actions #openProjects,.header-actions #phoneMore{display:inline-flex!important;min-width:48px;min-height:48px;align-items:center;justify-content:center;padding:0;margin:0}
+  #openProjects{font-size:0!important}#openProjects:after{content:'▤';font-size:24px}#phoneMore{font-size:26px}
+  .ide-layout{order:1;padding:0;flex:1;min-height:0;display:block;position:relative;overflow:hidden}.activity-rail,.panel-resizer{display:none}.explorer,.workspace,.assistant{position:absolute;inset:0;display:none}.ide-layout[data-section=files] .explorer,.ide-layout[data-section=editor] .workspace,.ide-layout[data-section=assistant] .assistant{display:flex}.mobile-nav{display:flex;flex-shrink:0;order:2;height:52px;min-height:52px;gap:0;padding:0;background:#181b21;border-top:1px solid #373d48;border-bottom:0}
+  .mobile-nav button{flex:1;min-height:48px;font-size:14px;margin:0;border:0;border-radius:0}.mobile-nav button.active{background:#2c2926;border-top:2px solid #f4a66a;border-bottom:0}
+  .statusbar,.workspace>.editor-tabs,.workspace>.diagnostics{display:none!important}
+  .workspace,.explorer,.assistant{border-radius:0;border:0}.open-file-tabs{height:48px;min-height:48px;padding:0;background:#1d2027}
+  .open-file-tabs button[role=tab]{min-height:48px;padding:0 12px;font-size:14px;max-width:210px}
+  .open-file-tabs .close-file-tab,.file-tab-item .close-file-tab{min-width:48px;max-width:48px;min-height:48px;padding:0;font-size:22px}
+  .mobile-edit-tools{height:48px;min-height:48px;padding:0 4px;gap:0;display:grid;grid-template-columns:repeat(5,minmax(48px,1fr)) minmax(72px,1.5fr);overflow:visible;background:#242831}
+  .mobile-edit-tools>button{display:none!important}
+  .mobile-edit-tools #editUndo,.mobile-edit-tools #editRedo,.mobile-edit-tools #caretLeft,.mobile-edit-tools #caretRight,.mobile-edit-tools [data-insert="  "],.mobile-edit-tools #mobileComplete{display:flex!important;height:48px;min-height:48px;min-width:48px;align-items:center;justify-content:center;padding:0;border:0;border-radius:0;font-size:18px}
+  .mobile-edit-tools #mobileComplete,.mobile-edit-tools [data-insert="  "]{font-size:13px}
+  #editUndo{grid-column:1;grid-row:1}#editRedo{grid-column:2;grid-row:1}#caretLeft{grid-column:3;grid-row:1}#caretRight{grid-column:4;grid-row:1}.mobile-edit-tools [data-insert="  "]{grid-column:5;grid-row:1}#mobileComplete{grid-column:6;grid-row:1}
+  .workspace-footer{height:48px;min-height:48px;padding:0 6px;gap:4px}.workspace-footer>span{max-width:none!important;min-width:0;flex:1;font-size:11px;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .workspace-footer button{min-height:48px;font-size:13px;padding:0 10px;border-radius:0;margin:0}.workspace-footer #openRuntime,.workspace-footer #openTests,.workspace-footer #checkSyntax{display:none!important}
+  .workspace-footer #saveFile{min-width:92px;background:transparent;border:0}.workspace-footer #runPreview{min-width:86px;border:0}
+  .file-row{min-height:48px;font-size:14px}.pane-heading button{min-width:48px;min-height:48px}.explorer-search input{font-size:16px;min-height:44px}
+  dialog button{min-height:48px;font-size:14px}dialog input,dialog select,dialog textarea{font-size:16px!important}dialog{max-height:90dvh;overflow:auto}.library-actions{max-height:none}.library-actions button{min-height:48px}.snapshot-row{flex-wrap:wrap}.snapshot-row span{flex-basis:100%}
+  body.keyboard-open .topbar,body.keyboard-open .mobile-nav{display:none!important}
+  .phone-menu-grid{grid-template-columns:1fr}
+}
+@media(max-width:800px) and (max-height:500px),(pointer:coarse) and (max-width:1100px) and (max-height:500px){.topbar,.mobile-nav{display:none!important}}
+
+@media(max-width:800px),(pointer:coarse) and (max-width:1100px){dialog button{min-width:48px}dialog label:has(input[type="checkbox"]){display:flex;align-items:center;min-height:48px;gap:12px}}
+
+.file-tabs-row{display:contents}@media(max-width:800px),(pointer:coarse) and (max-width:1100px){.file-tabs-row{display:flex;height:48px;min-height:48px;flex-shrink:0;background:#1d2027}.file-tabs-row .open-file-tabs{flex:1;min-width:0}.file-tabs-row #phoneMore{display:flex!important;min-width:48px;width:48px;height:48px;align-items:center;justify-content:center;flex-shrink:0;background:#282d37;border-left:1px solid #434b58;border-radius:0;font-size:26px}.phone-preview .mobile-edit-tools{display:none!important}}
+
+.phone-symbols{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.phone-symbols button{min-height:48px;font:16px ui-monospace,monospace;border:1px solid #505866}
+
+@media(max-width:800px),(pointer:coarse) and (max-width:1100px){#phoneSaveStatus{max-width:100%;overflow:hidden;text-overflow:ellipsis}}

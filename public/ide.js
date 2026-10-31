@@ -28,6 +28,7 @@
       if (!localStorage.getItem(KEY)) persist(state.project);
     } catch (e) { state.project=starter(); note('Could not restore saved workspace: '+e.message, true); }
     state.current = Object.hasOwn(state.project.files,'index.html') ? 'index.html' : Object.keys(state.project.files)[0] || null;
+    try{const view=JSON.parse(localStorage.getItem('vynqode-editor-view-v1')||'null');if(view?.project===navigationKey()&&Object.hasOwn(state.project.files,view.path)){state.current=view.path;for(const [path,value]of view.positions||[])if(Object.hasOwn(state.project.files,path)&&value&&['start','end','top','left'].every(key=>Number.isFinite(value[key])&&value[key]>=0))state.positions.set(path,value);}}catch{}
   }
   const DRAFT='vynqode-editor-draft-v1';
   let draftTimer;
@@ -50,7 +51,7 @@
     const list=$('projectSnapshots');list.textContent='';
     try{const snapshots=await window.VynqodeLibrary.list();
       if(!snapshots.length)list.textContent='No snapshots yet. Save your first recovery point above.';
-      for(const entry of snapshots){const row=document.createElement('div');row.className='snapshot-row';const text=document.createElement('span');text.textContent=entry.project.name+' · '+new Date(entry.savedAt).toLocaleString();
+      for(const entry of snapshots){const row=document.createElement('div');row.className='snapshot-row';const text=document.createElement('span');text.textContent=(entry.kind==='auto'?'Recovery · ':'Snapshot · ')+entry.project.name+' · '+new Date(entry.savedAt).toLocaleString();
         const open=document.createElement('button');open.textContent='Open';open.onclick=()=>{if(state.dirty&&!saveOpen())return;if(!confirm('Open this snapshot? Save a snapshot of your current project first if you need to return to it.'))return;if(replaceProject(entry.project,'Snapshot opened'))hideModal('projectsDialog');};
         const remove=document.createElement('button');remove.textContent='Remove';remove.onclick=async()=>{if(!confirm('Remove this saved snapshot? This does not delete the active project.'))return;try{await window.VynqodeLibrary.remove(entry.id);await listSnapshots();}catch(e){$('libraryStatus').textContent=e.message;}};
         row.append(text,open,remove);list.append(row);
@@ -107,7 +108,7 @@
     if(!confirm('Run up to two AI repair proposals? Every patch still needs approval. Up to four model requests may occur, including syntax corrections. After approval, checks run automatically in the selected runtime. Device JavaScript has no Node/npm APIs. Host tests execute trusted project code as your OS user. Your selected provider may bill AI requests.'))return;
     const projectSession=state.session,startingSnapshot=JSON.stringify(state.project);
     repairStarting=true;
-    try{await window.VynqodeLibrary.save(JSON.parse(startingSnapshot));}catch(e){return note('Create a recovery snapshot first: '+e.message,true);}finally{repairStarting=false;}
+    try{await window.VynqodeLibrary.checkpoint(JSON.parse(startingSnapshot));}catch(e){return note('Create a recovery snapshot first: '+e.message,true);}finally{repairStarting=false;}
     if(projectSession!==state.session||startingSnapshot!==JSON.stringify(state.project)||state.dirty)return note('Project changed before repair started. Run it again.',true);
     repair={id:crypto.randomUUID(),projectSession,remaining:2,runtime:$('testRuntime').value,entry:$('jsTestEntry').value,contracts:JSON.stringify(Object.fromEntries(Object.entries(state.project.files).filter(([path])=>protectedTest(path))))};
     $('stopRepair').hidden=false;hideModal('testsDialog');mobileSection('assistant');await nextRepair(repair.id);
@@ -133,7 +134,7 @@
     try { localStorage.setItem(BACKUP,JSON.stringify(state.project)); persist(next); }
     catch(e) {note('Could not replace project: '+e.message,true);return false;}
     state.session++;state.openFiles=[];state.positions.clear();state.project=next;state.current=Object.hasOwn(next.files,'index.html')?'index.html':Object.keys(next.files)[0]||null;
-    state.dirty=false;setView('editor');render();note(label||'Project opened');return true;
+    state.dirty=false;setView('editor');mobileSection('editor');render();note(label||'Project opened');return true;
   }
   function saveOpen() {
     if (!state.current || !state.dirty) return true;
@@ -143,11 +144,15 @@
     return mutate([{path:state.current,content}],'Saved '+state.current);
   }
   function pathIcon(path){return /\.html?$/i.test(path)?'◇':/\.css$/i.test(path)?'◫':/\.[cm]?jsx?$/i.test(path)?'JS':/\.tsx?$/i.test(path)?'TS':/\.json$/i.test(path)?'{}':'◈';}
+  function navigationKey(){return JSON.stringify([state.project.name,Object.keys(state.project.files).sort()]);}
   function rememberPosition() {
-    if (!state.current) return;
-    const editor=$('codeEditor');
-    state.positions.set(state.current,{start:editor.selectionStart,end:editor.selectionEnd,top:editor.scrollTop,left:editor.scrollLeft});
+    if(!state.current)return;
+    const input=$('codeEditor'),position=window.VynqodeEditor?.position()||{start:input.selectionStart,end:input.selectionEnd,top:input.scrollTop,left:input.scrollLeft};
+    state.positions.set(state.current,position);
+    try{localStorage.setItem('vynqode-editor-view-v1',JSON.stringify({project:navigationKey(),path:state.current,positions:[...state.positions]}));}catch{}
   }
+  function stateChanged(){window.dispatchEvent(new Event('vynqode:state'));}
+  async function saveAction(){if(window.VynqodeWorkspaceUI?.hasLinkedFolder())return window.VynqodeWorkspaceUI.saveToFolder();if(saveOpen()){note('Saved in app storage');stateChanged();return true;}return false;}
   function closeTab(path){if(path===state.current){if(!saveOpen())return;rememberPosition();const at=state.openFiles.indexOf(path);state.openFiles=state.openFiles.filter(item=>item!==path);state.current=state.openFiles[Math.min(at,state.openFiles.length-1)]||null;render();}else{state.openFiles=state.openFiles.filter(item=>item!==path);renderFileTabs();}}
   function renderFileTabs() {
     state.openFiles=state.openFiles.filter(path=>Object.hasOwn(state.project.files,path));
@@ -159,6 +164,7 @@
       tab.setAttribute('aria-selected',String(path===state.current));tab.tabIndex=path===state.current?0:-1;
       const wrapper=document.createElement('span');wrapper.className='file-tab-item';wrapper.role='presentation';const close=document.createElement('button');close.type='button';close.className='close-file-tab';close.textContent='×';close.dataset.closePath=path;close.tabIndex=-1;close.setAttribute('aria-label','Close '+path);wrapper.append(tab,close);tabs.append(wrapper);
     }
+    requestAnimationFrame(()=>tabs.querySelector('[aria-selected="true"]')?.scrollIntoView({block:'nearest',inline:'nearest'}));
   }
   function render() {
     $('projectName').textContent=state.project.name;
@@ -181,16 +187,16 @@
     editor.setSelectionRange(position?.start||0,position?.end||0);
     editor.scrollTop=position?.top||0;editor.scrollLeft=position?.left||0;
     $('lineNumbers').scrollTop=editor.scrollTop;
-    window.VynqodeEditor?.sync(state.project,state.current);
+    window.VynqodeEditor?.sync(state.project,state.current);stateChanged();
   }
-  function updateGutter(){const value=$('codeEditor').value;$('lineNumbers').textContent=Array.from({length:Math.max(1,value.split('\n').length)},(_,i)=>i+1).join('\n');}
+  function updateGutter(){if(window.VynqodeEditor&&window.VynqodeEditor.engine!=='simple')return;const value=$('codeEditor').value;$('lineNumbers').textContent=Array.from({length:Math.max(1,value.split('\n').length)},(_,i)=>i+1).join('\n');}
   function switchFile(path) {rememberPosition();if (state.dirty&&!saveOpen()) return;state.current=path;render();setView('editor');}
   function createFile(){if(state.dirty&&!saveOpen())return;const path=prompt('New file path (e.g. src/components/button.js):');if(path===null)return;try{core.safePath(path);if(Object.hasOwn(state.project.files,path))throw Error('File already exists');mutate([{path,content:''}],'Created '+path,path);}catch(e){note(e.message,true);}}
   function renameFile(){if(!state.current)return;const before=state.current;const after=prompt('Rename file:',before);if(after===null||after===before)return;try{core.safePath(after);if(Object.hasOwn(state.project.files,after))throw Error('Destination exists');if(state.dirty&&!saveOpen())return;mutate([{path:before,delete:true},{path:after,content:state.project.files[before]}],'Renamed '+before,after);}catch(e){note(e.message,true);}}
   function deleteFile(){if(!state.current||!confirm('Delete '+state.current+'? You can undo this change.'))return;state.dirty=false;mutate([{path:state.current,delete:true}],'File deleted');}
   function newProject(){if(state.dirty&&!saveOpen())return;if(!confirm('Create a fresh project? Current work can be recovered with Undo or a previously exported ZIP.'))return;const p=starter();replaceProject(p,'New project created');}
   function renameProject(){if(state.dirty&&!saveOpen())return;const name=prompt('Project name:',state.project.name);if(name===null)return;const next=core.normalize({...state.project,name});replaceProject(next,'Project renamed');}
-  function undo(){if(state.dirty&&!confirm('Discard unsaved editor text and undo the previous project change?'))return;try{const backup=localStorage.getItem(BACKUP);if(!backup)throw Error('No saved undo checkpoint');const next=core.normalize(JSON.parse(backup));localStorage.setItem(BACKUP,JSON.stringify(state.project));persist(next);state.project=next;state.current=Object.hasOwn(next.files,state.current)?state.current:Object.keys(next.files)[0]||null;render();note('Previous project change restored');}catch(e){note(e.message,true);}}
+  function undo(){if(state.dirty&&!confirm('Discard unsaved editor text and undo the previous project change?'))return;try{const backup=localStorage.getItem(BACKUP);if(!backup)throw Error('No saved undo checkpoint');const next=core.normalize(JSON.parse(backup));localStorage.setItem(BACKUP,JSON.stringify(state.project));persist(next);state.session++;state.project=next;state.current=Object.hasOwn(next.files,state.current)?state.current:Object.keys(next.files)[0]||null;render();note('Previous project change restored');}catch(e){note(e.message,true);}}
   async function download(blob,name){if(window.VynqodeNative?.available){return await window.VynqodeNative.exportZip(blob,name);}const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
   async function exportZip(){if(state.dirty&&!saveOpen())return;try{const bytes=core.zip(state.project);const name=state.project.name.replace(/[^a-z0-9_-]+/gi,'-').replace(/^-|-$/g,'')||'vynqode-project';const outcome=await download(new Blob([bytes],{type:'application/zip'}),name+'.zip');note(outcome?.cancelled?'Export cancelled. Your project is unchanged.':window.VynqodeNative?.available?'Project ZIP shared through Android':'Project ZIP exported');}catch(e){note(e.message,true);}}
   async function importFiles(files){if(!files||!files.length)return;if(state.dirty&&!saveOpen())return;
@@ -221,6 +227,7 @@
     for(const [tab,value] of [['editorTab','editor'],['previewTab','preview'],['splitTab','split']]){
       $(tab).classList.toggle('active',view===value);$(tab).setAttribute('aria-selected',String(view===value));
     }
+    stateChanged();
   }
   function resolveAsset(target,base) {if(!target||/^(?:https?:|data:|blob:|\/\/|\/|#)/i.test(target))return null;const stack=base.split('/').slice(0,-1);for(const part of target.split('/')){if(!part||part==='.')continue;if(part==='..'){if(!stack.length)return null;stack.pop();}else stack.push(part);}try{return core.safePath(stack.join('/'));}catch{return null;}}
   function preview(){if(state.dirty&&!saveOpen())return;const paths=Object.keys(state.project.files);const source=(state.current&&/\.html?$/i.test(state.current)?state.current:paths.find(x=>x==='index.html')||paths.find(x=>/\.html?$/i.test(x)));
@@ -442,18 +449,18 @@
       switchFile(state.openFiles[next]);
       $('openFileTabs').querySelector('[aria-selected="true"]')?.focus();
     };
-    $('fileList').onclick=e=>{const row=e.target.closest('button[data-file]');if(row)switchFile(row.dataset.file);};
-    $('codeEditor').addEventListener('input',()=>{state.dirty=true;scheduleDraft();$('fileBadge').textContent=(state.current||'')+' •';updateGutter();});
+    $('fileList').onclick=e=>{const row=e.target.closest('button[data-file]');if(row){switchFile(row.dataset.file);mobileSection('editor');}};
+    $('codeEditor').addEventListener('input',()=>{state.dirty=true;scheduleDraft();$('fileBadge').textContent=(state.current||'')+' •';updateGutter();stateChanged();});
     $('codeEditor').addEventListener('scroll',()=>{$('lineNumbers').scrollTop=$('codeEditor').scrollTop;});
     $('codeEditor').addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const ta=e.currentTarget;ta.setRangeText('  ',ta.selectionStart,ta.selectionEnd,'end');ta.dispatchEvent(new Event('input'));}});
     document.addEventListener('keydown',e=>{
-      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveOpen();}
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveAction();}
       if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){e.preventDefault();quickOpen();}
       if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key.toLowerCase()==='f'){e.preventDefault();window.VynqodeWorkspaceUI?.search();}
       if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&e.target.id!=='assistantPrompt'){e.preventDefault();preview();}
     });
     $('newProject').onclick=newProject;$('projectName').onclick=renameProject;$('addFile').onclick=createFile;$('renameFile').onclick=renameFile;$('deleteFile').onclick=deleteFile;
-    $('saveFile').onclick=saveOpen;$('checkSyntax').onclick=checkProject;$('runPreview').onclick=preview;$('refreshPreview').onclick=preview;$('undoChange').onclick=undo;
+    $('saveFile').onclick=saveAction;$('checkSyntax').onclick=checkProject;$('runPreview').onclick=preview;$('refreshPreview').onclick=preview;$('undoChange').onclick=undo;
     $('editorTab').onclick=()=>setView('editor');$('previewTab').onclick=()=>{setView('preview');preview();};$('splitTab').onclick=()=>{setView('split');preview();};
     $('exportProject').onclick=exportZip;$('importProject').onclick=()=>$('importInput').click();
     $('importInput').onchange=async e=>{try{await importFiles(e.target.files);}finally{e.target.value='';}};
@@ -489,7 +496,7 @@
   if(!cloud)throw Error('Vynqode secure cloud bridge is missing');
   load();wire();render();recoverDraft();mobileSection('editor');if(window.VynqodeNative?.available||location.hostname.endsWith('github.io'))$('testRuntime').value='quickjs';$('testRuntime').onchange();
   // Public, intentionally limited diagnostics interface for automation/test harnesses.
-  window.Vynqode = Object.freeze({ getProject:()=>JSON.parse(JSON.stringify(state.project)),getProjectSession:()=>state.session,applyManualChanges:(changes,expected,session)=>{if(!saveOpen())return false;if(state.session!==session||window.VynqodeProjectIndex.identity(state.project)!==expected)throw Error('Project changed. Review replacement again.');return mutate(changes,'Applied '+changes.length+' reviewed file replacements');},getModel:()=>state.model,resumeReview:async(job)=>{if(!saveOpen())return false;const snapshots=await window.VynqodeLibrary.list();const base=snapshots.find(row=>row.id===job.snapshotId);if(!base||window.VynqodeProjectIndex.identity(base.project)!==window.VynqodeProjectIndex.identity(state.project))throw Error('Project differs from this task checkpoint. Open the checkpoint or request fresh edits.');const proposal=core.parseSuggestion(JSON.stringify(job.proposal),state.project);const checks=proposal.changes.filter(change=>!change.delete).map(change=>core.check(change.path,change.content));if(checks.some(check=>check.status==='fail'))throw Error('Stored edits no longer pass syntax validation.');state.proposal={proposal,jobId:job.id,projectSession:state.session,revision:state.project.revision,snapshot:JSON.stringify(state.project),repairToken:null};fillReview(proposal,{context:job.context,checks:job.checks});showModal('reviewDialog');return true;},getCurrentFile:()=>state.current,switchFile,save:saveOpen,isDirty:()=>state.dirty,openProject:replaceProject,
+  window.Vynqode = Object.freeze({ getProject:()=>JSON.parse(JSON.stringify(state.project)),getProjectSession:()=>state.session,getProjectName:()=>state.project.name,refreshGutter:updateGutter,getViewPosition:()=>state.positions.get(state.current),rememberPosition,flushDraft:storeDraft,setSection:mobileSection,applyManualChanges:(changes,expected,session)=>{if(!saveOpen())return false;if(state.session!==session||window.VynqodeProjectIndex.identity(state.project)!==expected)throw Error('Project changed. Review replacement again.');return mutate(changes,'Applied '+changes.length+' reviewed file replacements');},getModel:()=>state.model,resumeReview:async(job)=>{if(!saveOpen())return false;const snapshots=await window.VynqodeLibrary.list();const base=snapshots.find(row=>row.id===job.snapshotId);if(!base||window.VynqodeProjectIndex.identity(base.project)!==window.VynqodeProjectIndex.identity(state.project))throw Error('Project differs from this task checkpoint. Open the checkpoint or request fresh edits.');const proposal=core.parseSuggestion(JSON.stringify(job.proposal),state.project);const checks=proposal.changes.filter(change=>!change.delete).map(change=>core.check(change.path,change.content));if(checks.some(check=>check.status==='fail'))throw Error('Stored edits no longer pass syntax validation.');state.proposal={proposal,jobId:job.id,projectSession:state.session,revision:state.project.revision,snapshot:JSON.stringify(state.project),repairToken:null};fillReview(proposal,{context:job.context,checks:job.checks});showModal('reviewDialog');return true;},getCurrentFile:()=>state.current,switchFile,save:saveOpen,isDirty:()=>state.dirty,openProject:replaceProject,
     attachTestEngine:(engine,name='Test model')=>{if(!engine?.chat?.completions?.create)throw Error('Invalid model engine');state.engine=engine;state.model=name;$('activeModel').textContent=name;$('aiLight').classList.add('ready');}
   });
 })();

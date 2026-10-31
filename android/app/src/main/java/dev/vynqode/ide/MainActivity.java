@@ -8,6 +8,14 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(dev.vynqode.ide.nativebridge.VynqodeNativePlugin.class);
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                if (getBridge() == null) { moveTaskToBack(true); return; }
+                getBridge().getWebView().evaluateJavascript("Boolean(window.VynqodePhone && window.VynqodePhone.back())", value -> {
+                    if (!"true".equals(value)) moveTaskToBack(true);
+                });
+            }
+        });
         if (getBridge() != null) {
             // JavaScriptInterface objects are visible in every frame, including untrusted
             // project previews. Keep only Capacitor's origin-scoped, main-frame message

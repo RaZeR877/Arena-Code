@@ -16,7 +16,7 @@ def inspect(apk,tools,current=True):
  manifest=re.search(r"package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'",badging)
  if not manifest:raise ValueError('APK package/version metadata unavailable')
  with zipfile.ZipFile(apk) as archive:
-  required={'assets/public/index.html','assets/public/native-platform.js','assets/public/project-library.js','assets/public/playground-worker.js','assets/public/quickjs.wasm'}
+  required={'assets/public/index.html','assets/public/native-platform.js','assets/public/project-library.js','assets/public/phone-workbench.js','assets/public/smart-editor.js','assets/public/playground-worker.js','assets/public/quickjs.wasm'}
   if current and not required.issubset(archive.namelist()):raise ValueError('APK is missing bundled IDE/runtime assets')
   if any(name.lower().endswith(('.jks','.keystore','.p12','.env')) for name in archive.namelist()):raise ValueError('Credential-like file is packaged in the APK')
   config=json.loads(archive.read('assets/capacitor.config.json'))

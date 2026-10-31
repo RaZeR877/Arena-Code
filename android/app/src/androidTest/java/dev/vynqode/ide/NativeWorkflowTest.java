@@ -36,7 +36,7 @@ public class NativeWorkflowTest {
     }
     @Test public void localEditingRecoverySnapshotsNativeExportAndPreviewIsolation() throws Exception {
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)) {
-            until(scenario,"Boolean(window.Vynqode && window.VynqodeNative && window.VynqodeLibrary)");
+            until(scenario,"Boolean(window.Vynqode && window.VynqodeNative && window.VynqodeLibrary && window.VynqodeEditor && window.VynqodePhone)");
             assertEquals("true",js(scenario,"window.VynqodeNative.available"));
             // Real bundled VM execution in Android WebView; no model or paid API request.
             js(scenario,"window.__vm=null;VynqodePlayground.run({files:{'test.cjs':\"const assert=require('assert');assert.equal(2+3,5);assert.equal(typeof fetch,'undefined');assert.equal(typeof Capacitor,'undefined');\"}},'test.cjs',true).then(result=>window.__vm=result);true");
@@ -56,6 +56,12 @@ public class NativeWorkflowTest {
                 assertEquals("Native snapshot storage error: "+js(scenario,"window.__saveError"),"null",js(scenario,"window.__saveError"));
                 js(scenario,"window.__snapshotVerified=false;VynqodeLibrary.list().then(rows=>{window.__snapshotVerified=rows.some(r=>r.id===window.__snapshotId&&r.project.files['index.html'].includes('Recovered native draft'));});true");
                 until(scenario,"window.__snapshotVerified===true");
+                // Actual CodeMirror document/history in WebView; physical IME testing is separate.
+                js(scenario,"Vynqode.switchFile('app.js');window.__phoneBase=document.getElementById('codeEditor').value;const view=VynqodeEditor.phoneView;view.dispatch({changes:{from:view.state.doc.length,insert:' // touch edit'}});true");
+                assertEquals("true",js(scenario,"Vynqode.isDirty() && document.getElementById('codeEditor').value.endsWith('// touch edit')"));
+                js(scenario,"document.getElementById('editUndo').click();true");
+                assertEquals("true",js(scenario,"document.getElementById('codeEditor').value===window.__phoneBase"));
+                js(scenario,"document.getElementById('editRedo').click();Vynqode.save();true");
                 // Exercise bundled Monaco and its real language worker inside Android WebView.
                 js(scenario,"document.querySelector('[data-file=\"app.js\"]').click();document.getElementById('toggleSmartEditor').click();true");
                 until(scenario,"Boolean(window.VynqodeEditor && window.VynqodeEditor.enabled)");
