@@ -61,7 +61,7 @@ try:
   page.locator('#openProjects').click();page.locator('#saveDeviceFolder').click();page.wait_for_function("document.getElementById('deviceFolderStatus').textContent.includes('again')")
   assert page.evaluate('window.deviceSaves')==0
   page.locator('#closeProjects').click()
-  page.set_viewport_size({'width':390,'height':844});page.locator('[data-section="editor"]').click();page.locator('#codeEditor').focus()
+  page.set_viewport_size({'width':390,'height':844});page.locator('button[data-section="editor"]').click();page.locator('#codeEditor').focus()
   page.locator('[data-insert="{}"]').click();assert '{}' in page.locator('#codeEditor').input_value()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   assert not errors,errors

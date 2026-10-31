@@ -13,3 +13,15 @@ test('persisted review identity ignores timestamps and insertion order but detec
  const a={name:'a',files:{'z.js':'1','a.js':'2'},updatedAt:'old'},b={name:'a',files:{'a.js':'2','z.js':'1'},updatedAt:'new'};
  assert.equal(index.identity(a),index.identity(b));b.files['z.js']='3';assert.notEqual(index.identity(a),index.identity(b));
 });
+
+test('reviewed replacement treats special text literally and reports complete file changes',()=>{
+ const project={name:'replace',files:{'a.js':'Needle Needle','b.js':'needle'}};
+ const result=index.replace(project,'needle','$&',false);assert.equal(result.count,3);assert.equal(result.changes[0].content,'$& $&');assert.equal(project.files['a.js'],'Needle Needle');
+ assert.equal(index.replace(project,'Needle','x',true).count,2);assert.throws(()=>index.replace(project,'','x'));assert.throws(()=>index.replace({files:{'large.js':'x'.repeat(10000)}},'x','y'.repeat(10000)),/file limit/);
+});
+test('explicit context pins include complete files or fail before model request',async()=>{
+ const project={name:'pins',files:{'app.js':'const app=1;','ignored.js':'const ignored=2;','large.js':'x'.repeat(3000),'package.json':'{"scripts":{"test":"node --test"}}'}};
+ const context=ai.context(project,'explain','app.js',2000,['ignored.js']);assert.ok(context.included.includes('ignored.js'));assert.ok(context.text.includes('PROJECT OVERVIEW'));
+ assert.throws(()=>ai.context(project,'explain','app.js',2000,['large.js']),/Pinned file exceeds/);
+ let calls=0;await assert.rejects(()=>ai.propose({engine:{chat:{completions:{create:async()=>{calls++;return {choices:[{message:{content:'{"summary":"Missing context: src/config.js","changes":[]}'}}]};}}}},project,task:'fix',current:'app.js'}),error=>error.code==='MISSING_CONTEXT');assert.equal(calls,1);
+});

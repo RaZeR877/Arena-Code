@@ -4,7 +4,12 @@ on:
 permissions:
   contents: read
 jobs:
+  native-validation:
+    uses: ./.github/workflows/android-device.yml
+  browser-validation:
+    uses: ./.github/workflows/pages-browser.yml
   release:
+    needs: [native-validation, browser-validation]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -37,12 +42,24 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run ci
       - run: npm run android:release
+      - name: Verify release identity and APK contents
+        run: python3 scripts/verify-android-release.py --apk android/app/build/outputs/apk/release/app-release.apk --trusted-cert-file android/release-certificate.sha256 --report android/app/build/outputs/apk/release/verification.json
+      - name: Generate downloadable checksums
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib
+          for file in [Path('android/app/build/outputs/apk/release/app-release.apk'), Path('android/app/build/outputs/bundle/release/app-release.aab')]:
+            file.with_suffix(file.suffix+'.sha256').write_text(hashlib.sha256(file.read_bytes()).hexdigest()+'  '+file.name+'\n')
       - uses: actions/upload-artifact@v4
         with:
           name: vynqode-signed-release
           path: |
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/apk/release/app-release.apk.sha256
+            android/app/build/outputs/apk/release/verification.json
+            android/app/build/outputs/bundle/release/app-release.aab.sha256
           if-no-files-found: error
           retention-days: 7
       - name: Remove temporary key

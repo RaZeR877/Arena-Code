@@ -2,6 +2,9 @@
 (() => {
  'use strict';
  const $=id=>document.getElementById(id);let projectId=null,fingerprint=null,terminal=null,fit=null,busy=false;
+ if(window.VynqodeNative?.available){$('nativeCompanion').hidden=false;document.querySelector('.runtime-columns').style.display='none';}
+ $('companionExport').onclick=()=>$('libraryExport').click();$('companionImport').onclick=()=>$('libraryImport').click();
+ $('companionOpen').onclick=async()=>{try{await window.VynqodeNative.openCompanion();status('Opened the local companion browser. Keep USB connected and use ZIPs to transfer source.');}catch(error){status(error.message);}};
  const sessions={terminal:null,debug:null};
  async function request(path,options={}){const response=await fetch(path,{credentials:'same-origin',...options});const data=await response.json();if(!response.ok)throw Error(data.error||'Local runtime request failed');return data;}
  const post=(path,body)=>request(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -46,7 +49,7 @@
  }
  async function stop(kind){const s=sessions[kind];if(!s)return;clearInterval(s.timer);sessions[kind]=null;try{await request('./api/ide/runtime/'+s.id,{method:'DELETE'});}catch(e){status(e.message);}}
  async function action(action){const s=sessions.debug;if(!s)return status('Start the debugger first');try{await post('./api/ide/runtime/'+s.id,{action,line:Number($('breakpointLine').value)});await poll('debug');}catch(e){status(e.message);}}
- $('openRuntime').onclick=async()=>{$('runtimeDialog').showModal();$('startTerminal').disabled=true;$('startDebugger').disabled=true;try{const capabilities=await request('./api/ide/runtime');$('startTerminal').disabled=!capabilities.terminal;$('startDebugger').disabled=!capabilities.debugger;status('Local trusted-code tools ready. Start a session explicitly.');}catch{status('Terminal and debugger require the localhost Node app. They are unavailable in static Pages and the Android APK.');}};
+ $('openRuntime').onclick=async()=>{$('runtimeDialog').showModal();const isNative=Boolean(window.VynqodeNative?.available);$('nativeCompanion').hidden=!isNative;document.querySelector('.runtime-columns').style.display=isNative?'none':'';if(isNative){status('Use isolated JS in Tests, or open the optional USB computer companion for Node/terminal/debugging.');return;}$('startTerminal').disabled=true;$('startDebugger').disabled=true;try{const capabilities=await request('./api/ide/runtime');$('startTerminal').disabled=!capabilities.terminal;$('startDebugger').disabled=!capabilities.debugger;status('Local trusted-code tools ready. Start a session explicitly.');}catch{status('Terminal and debugger require the localhost Node app. They are unavailable in static Pages and the Android APK.');}};
  $('startTerminal').onclick=()=>start('terminal');$('stopTerminal').onclick=()=>stop('terminal');$('startDebugger').onclick=()=>start('debug');$('stopDebugger').onclick=()=>stop('debug');
  for(const button of document.querySelectorAll('[data-debug-action]'))button.onclick=()=>action(button.dataset.debugAction);
  async function close(){await Promise.all([stop('terminal'),stop('debug')]);$('runtimeDialog').close();}

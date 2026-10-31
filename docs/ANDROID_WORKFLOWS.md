@@ -1,6 +1,6 @@
 # Android workflow draft
 
-This draft extends the existing Vynqode IDE. It is local, unpublished work on
+See [QUALITY_MILESTONE.md](QUALITY_MILESTONE.md) for the latest quality/0.16 development follow-up. This draft extends the existing Vynqode IDE. It is local, unpublished work on
 `feat/android-complete-workflow`, separate from the previously published RC.
 The default budget remains ₹0. No paid model, backend or store account is required.
 
@@ -62,7 +62,7 @@ five private recovery records, and saves a browser snapshot before the operation
 Those records are under app-private `files/device-recovery`; restore a snapshot
 or ZIP through the UI to recover a project. Multi-file SAF writes are not atomic.
 Device-folder Git metadata is separate from app-local Git; there is no SAF `.git`
-bridge, arbitrary remote host support, branch-management UI or automatic merge.
+bridge, arbitrary remote host support, arbitrary merge strategies. Branch creation/switching, editor diffs, pull and text-conflict resolution are now available in app-local Git; see [the quality follow-up](QUALITY_MILESTONE.md).
 
 Git transport caps responses/uploads, object counts, individual inflated objects
 and expanded pack totals before checkout. Large repositories may be rejected even

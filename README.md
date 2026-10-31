@@ -51,7 +51,7 @@ GitHub Pages is built exclusively from `public/index.html`, `public/ide.css`, `p
 
 ### Android workflow draft
 
-Native credential setup, folder access, offline Git, resumable reviewed edits and isolated JavaScript execution are described in [Android workflows](docs/ANDROID_WORKFLOWS.md). This local draft is separate from the previously published RC; native compilation and browser tests do not establish physical-device readiness. ₹0 remains the default; paid AI is optional.
+Native credential setup, folder access, offline Git, resumable reviewed edits and isolated JavaScript execution are described in [Android workflows](docs/ANDROID_WORKFLOWS.md). The [quality follow-up](docs/QUALITY_MILESTONE.md) adds branches/pull/conflict recovery, reviewed replacement, cross-file diagnostics, functional AI checks and an optional USB computer companion. This local draft is separate from the previously published RC; native compilation and browser tests do not establish physical-device readiness. ₹0 remains the default; paid AI is optional.
 
 ### Naming/legal note
 
@@ -62,7 +62,7 @@ The working name **Vynqode** was chosen after a preliminary web search revealed 
 - This web editor is for small, text-focused projects (100 files, 3 MiB total, 400 KiB per file). Unsafe paths and obvious private-key filenames are rejected.
 - AI suggestions are checked for syntax when supported, show before/after code, and require explicit approval. Model output can still be incorrect or insecure; the bundled QuickJS runtime can run bounded synchronous JavaScript/assert tests; it does not implement Node/npm.
 - HTML preview runs in an opaque-origin sandbox, but scripts can still make outbound requests. Do not paste secrets into previews or untrusted code.
-- Local browser data can be lost when storage is cleared. The one-step undo is not a version-control system.
+- Local browser data can be lost when storage is cleared. The one-step undo is limited; opt-in app-local Git adds actual history, branches, diffs and reviewed merge recovery.
 - Back-end Docker tools, hosted accounts, builds, terminals, and deployments require a separate server and are not available on GitHub Pages.
 - Existing browser projects stored under the old key are migrated on first load; the legacy storage key remains intact for fallback.
 

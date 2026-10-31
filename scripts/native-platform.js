@@ -12,6 +12,7 @@ window.VynqodeDiff = (before,after)=>diffLines(before,after,{timeout:200,maxEdit
 window.VynqodeNative = Object.freeze({
   available: Capacitor.isNativePlatform(),
   ai:{providers:()=>Device.providers(),configure:provider=>Device.configure({provider}),clear:provider=>Device.clear({provider}),complete:request=>Device.complete({...request,approved:true})},
+  openCompanion:()=>Device.openCompanion(),
   chooseFolder:()=>Device.chooseFolder(),reopenFolder:()=>Device.reopenFolder(),saveFolder:request=>Device.saveFolder(request),gitRequest:request=>Device.gitRequest(request),
   async exportZip(blob, name) {
     if (!Capacitor.isNativePlatform()) throw Error('Native export is unavailable in the browser');

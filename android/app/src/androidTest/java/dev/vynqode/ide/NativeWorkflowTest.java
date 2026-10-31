@@ -51,7 +51,7 @@ public class NativeWorkflowTest {
                 js(scenario,"window.__oldDocument=true;true");
                 scenario.onActivity(activity -> activity.getBridge().getWebView().reload());
                 until(scenario,"Boolean(window.Vynqode && !window.__oldDocument && document.getElementById('codeEditor').value.includes('Recovered native draft'))");
-                js(scenario,"document.getElementById('saveFile').click();window.__saved=false;window.__saveError=null;VynqodeLibrary.save(Vynqode.getProject()).then(id=>{window.__snapshotId=id;window.__saved=true;}).catch(error=>window.__saveError=String(error.stack||error));true");
+                js(scenario,"document.getElementById('saveFile').click();window.__saved=false;window.__saveError=null;VynqodeLibrary.save(Vynqode.getProject()).then(id=>{window.__snapshotId=id;localStorage.setItem('vynqode-native-test-snapshot',id);window.__saved=true;}).catch(error=>window.__saveError=String(error.stack||error));true");
                 until(scenario,"window.__saved===true||Boolean(window.__saveError)");
                 assertEquals("Native snapshot storage error: "+js(scenario,"window.__saveError"),"null",js(scenario,"window.__saveError"));
                 js(scenario,"window.__snapshotVerified=false;VynqodeLibrary.list().then(rows=>{window.__snapshotVerified=rows.some(r=>r.id===window.__snapshotId&&r.project.files['index.html'].includes('Recovered native draft'));});true");
@@ -63,6 +63,11 @@ public class NativeWorkflowTest {
                 until(scenario,"window.__workerReady===true");
                 assertEquals("true",js(scenario,"Vynqode.getProject().files['app.js'].includes('nativeEdited')"));
                 js(scenario,"document.getElementById('toggleSmartEditor').click();true");
+                // Recreate after backgrounding: persistent source survives activity lifecycle loss.
+                scenario.moveToState(androidx.lifecycle.Lifecycle.State.CREATED);
+                scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED);
+                scenario.recreate();
+                until(scenario,"Boolean(window.Vynqode && Vynqode.getProject().files['app.js'].includes('nativeEdited'))");
                 // An opaque preview must not gain Java or Capacitor bridges.
                 js(scenario,"window.__previewProbe=null;window.addEventListener('message',e=>{if(e.source===document.getElementById('previewFrame').contentWindow&&e.data.nativeProbe)window.__previewProbe=e.data.types;});document.getElementById('previewFrame').srcdoc='<script>parent.postMessage({nativeProbe:true,types:[typeof androidBridge,typeof CapacitorCookiesAndroidInterface,typeof CapacitorHttpAndroidInterface]},\"*\")<'+ '/script>';true");
                 until(scenario,"Array.isArray(window.__previewProbe)");
@@ -83,7 +88,7 @@ public class NativeWorkflowTest {
                 assertEquals("\"cancelled\"",js(scenario,"window.__exportResult"));
                 assertTrue(exported.delete());
             } finally {
-                js(scenario,"if(window.__snapshotId)VynqodeLibrary.remove(window.__snapshotId);const backup=JSON.parse(localStorage.getItem('vynqode-native-test-backup')||'{}');for(const [key,value]of Object.entries(backup)){if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}localStorage.removeItem('vynqode-native-test-backup');true");
+                js(scenario,"const snapshot=window.__snapshotId||localStorage.getItem('vynqode-native-test-snapshot');if(snapshot)VynqodeLibrary.remove(snapshot);localStorage.removeItem('vynqode-native-test-snapshot');const backup=JSON.parse(localStorage.getItem('vynqode-native-test-backup')||'{}');for(const [key,value]of Object.entries(backup)){if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}localStorage.removeItem('vynqode-native-test-backup');true");
             }
         }
     }

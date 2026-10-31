@@ -62,4 +62,22 @@ public class ProviderClientTest {
             assertEquals(0,redirected.get());
         }finally{server.close();fixture.join(1000);}
     }
+    @Test public void gitTransportRejectsNonGitHubCredentialUrlsAndWrongMethods()throws Exception{
+        for(String value:new String[]{"http://github.com/a/b.git/info/refs?service=git-upload-pack","https://user:token@github.com/a/b.git/info/refs?service=git-upload-pack","https://example.com/a/b.git/info/refs?service=git-upload-pack","https://github.com/a/b.git/info/refs?service=git-upload-pack&token=secret","https://github.com/a/b.git/%67it-upload-pack"}){
+            try{GitTransport.validate(value,"GET");fail("Unsafe Git URL accepted");}catch(IllegalArgumentException expected){}
+        }
+        java.net.URI refs=GitTransport.validate("https://github.com/a/b.git/info/refs?service=git-upload-pack","GET");assertFalse(GitTransport.headers(refs,null).containsKey("Authorization"));
+        try{GitTransport.validate("https://github.com/a/b.git/git-receive-pack","GET");fail("GET push accepted");}catch(IllegalArgumentException expected){}
+    }
+    @Test public void gitTransportAttachesOnlyNativeAuthorizationAndProtocolHeaders()throws Exception{
+        java.net.URI uri=GitTransport.validate("https://github.com/a/b.git/git-receive-pack","POST");java.util.Map<String,String> headers=GitTransport.headers(uri,"fixture-base64-token");
+        assertEquals("Basic fixture-base64-token",headers.get("Authorization"));assertEquals("application/x-git-receive-pack-request",headers.get("Content-Type"));assertFalse(uri.toString().contains("fixture"));
+    }
+
+    @Test public void invalidCredentialCharactersFailWithoutEchoBeforeNetwork()throws Exception{
+        String secret="fixture-secret\nInjected: header";JSONObject config=config("allowed").put("key",secret);
+        try{ProviderClient.complete("openai",config,"allowed",messages(),(u,m,h,b,l)->{throw new AssertionError("Invalid credential reached network");});fail("Header injection accepted");}
+        catch(IllegalArgumentException expected){assertFalse(expected.getMessage().contains("fixture-secret"));assertFalse(expected.getMessage().contains("Injected"));}
+    }
+
 }

@@ -10,6 +10,7 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ScrollView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSArray;
@@ -68,12 +69,13 @@ public final class VynqodeNativePlugin extends Plugin {
         EditText key=new EditText(getContext());key.setSingleLine();key.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);key.setHint(previous==null?"Provider key / token":"Leave blank to keep saved key");
         if(Build.VERSION.SDK_INT>=26)key.setImportantForAutofill(android.view.View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
         if(!ollama)layout.addView(key);
-        AlertDialog dialog=new AlertDialog.Builder(getContext()).setTitle(github?"GitHub access":ProviderClient.DEFAULTS.get(provider)[0]).setView(layout).setPositiveButton("Save securely",null).setNegativeButton("Cancel",(d,w)->{key.setText("");call.reject("Configuration cancelled");}).create();
+        ScrollView scroll=new ScrollView(getContext());scroll.addView(layout);
+        AlertDialog dialog=new AlertDialog.Builder(getContext()).setTitle(github?"GitHub access":ProviderClient.DEFAULTS.get(provider)[0]).setView(scroll).setPositiveButton("Save securely",null).setNegativeButton("Cancel",(d,w)->{key.setText("");call.reject("Configuration cancelled");}).create();
         dialog.setOnCancelListener(d->{key.setText("");call.reject("Configuration cancelled");});
-        dialog.setOnShowListener(d->{dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+        dialog.setOnShowListener(d->{dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
             try{
                 String secret=key.getText().toString();if(secret.isEmpty()&&previous!=null)secret=previous.optString("key");
-                if(!ollama&&(secret.length()<8||secret.length()>512)){key.setError("Enter a valid credential");return;}
+                if(!ollama&&(!secret.matches("[\\x21-\\x7e]{8,512}"))){key.setError("Enter a valid credential");return;}
                 JSONObject record=new JSONObject().put("key",secret);
                 if(!github){record.put("models",ProviderClient.models(models.getText().toString()));record.put("endpoint",ProviderClient.endpoint(provider,endpoint.getText().toString()).toString());}
                 final JSONObject saved=record;key.setText("");dialog.dismiss();execute(call,()->{vault.save(provider,saved);return new JSONObject().put("configured",true);});
@@ -87,6 +89,7 @@ public final class VynqodeNativePlugin extends Plugin {
         JSONObject config=vault.read(provider);if(config==null)throw new IllegalStateException("Configure this provider first");
         return ProviderClient.complete(provider,config,call.getString("model"),call.getArray("messages"),new ProviderClient.Network());
     });}
+    @PluginMethod public void openCompanion(PluginCall call){getActivity().runOnUiThread(()->new AlertDialog.Builder(getContext()).setTitle("Open computer companion?").setMessage("This opens http://127.0.0.1:3000 in your browser. It requires a trusted USB computer running Vynqode and adb reverse. Terminal commands execute on that computer; project changes transfer only through explicit ZIP export/import.").setPositiveButton("Open browser",(dialog,which)->{try{Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("http://127.0.0.1:3000"));getActivity().startActivity(intent);call.resolve(new JSObject().put("opened",true));}catch(Exception error){call.reject("No browser could open the localhost companion");}}).setNegativeButton("Cancel",(d,w)->call.reject("Companion cancelled")).setOnCancelListener(d->call.reject("Companion cancelled")).show());}
     @PluginMethod public void chooseFolder(PluginCall call){Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION|Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION|Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);startActivityForResult(call,intent,"folderSelected");}
     @ActivityCallback private void folderSelected(PluginCall call,ActivityResult result){
         if(call==null)return;
@@ -102,14 +105,12 @@ public final class VynqodeNativePlugin extends Plugin {
     @PluginMethod public void gitRequest(PluginCall call){
         String raw=call.getString("url"),method=call.getString("method","GET");
         try{
-            URI uri=new URI(raw);
-            if(!"https".equals(uri.getScheme())||!"github.com".equals(uri.getHost())||uri.getUserInfo()!=null||uri.getFragment()!=null||uri.getPort()!=-1&&uri.getPort()!=443||!uri.getPath().matches("/[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}\\.git/(info/refs|git-upload-pack|git-receive-pack)"))throw new IllegalArgumentException("Only GitHub HTTPS Git transport is supported");
+            URI uri=GitTransport.validate(raw,method);
             boolean refs=uri.getPath().endsWith("/info/refs");
-            if(refs&&!(method.equals("GET")&&("service=git-upload-pack".equals(uri.getQuery())||"service=git-receive-pack".equals(uri.getQuery())))||!refs&&!(method.equals("POST")&&uri.getQuery()==null))throw new IllegalArgumentException("Invalid Git transport request");
             Task request=()->{
                 String encoded=call.getString("body","");if(encoded.length()>24*1024*1024)throw new IllegalArgumentException("Git request too large");byte[] body=method.equals("GET")?null:android.util.Base64.decode(encoded,android.util.Base64.DEFAULT);
-                Map<String,String> headers=new LinkedHashMap<>();headers.put("User-Agent","Vynqode-Git");if(!refs)headers.put("Content-Type",uri.getPath().endsWith("git-receive-pack")?"application/x-git-receive-pack-request":"application/x-git-upload-pack-request");
-                JSONObject credentials=vault.read("github");if(credentials!=null)headers.put("Authorization","Basic "+android.util.Base64.encodeToString(("x-access-token:"+credentials.getString("key")).getBytes(StandardCharsets.UTF_8),android.util.Base64.NO_WRAP));
+                JSONObject credentials=vault.read("github");String authorization=credentials==null?null:android.util.Base64.encodeToString(("x-access-token:"+credentials.getString("key")).getBytes(StandardCharsets.UTF_8),android.util.Base64.NO_WRAP);
+                Map<String,String> headers=GitTransport.headers(uri,authorization);
                 ProviderClient.Response response=new ProviderClient.Network().execute(uri,method,headers,body,16*1024*1024);
                 return new JSONObject().put("statusCode",response.status).put("body",android.util.Base64.encodeToString(response.body,android.util.Base64.NO_WRAP)).put("headers",new JSONObject().put("content-type",response.contentType==null?"application/octet-stream":response.contentType));
             };

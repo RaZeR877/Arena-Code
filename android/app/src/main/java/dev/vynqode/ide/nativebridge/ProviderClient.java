@@ -67,7 +67,7 @@ public final class ProviderClient {
             if(!(role.equals("system")||role.equals("user")||role.equals("assistant"))||text.length()>42000||(total+=text.length())>100000)throw new IllegalArgumentException("Invalid or oversized context");
             clean.put(new JSONObject().put("role",role).put("content",text));if(role.equals("system"))system.append(text).append("\n");}
         URI uri=endpoint(provider,config.optString("endpoint"));Map<String,String> headers=new LinkedHashMap<>();headers.put("Content-Type","application/json");
-        String key=config.optString("key");JSONObject body=new JSONObject().put("model",model);
+        String key=config.optString("key");if(!key.isEmpty()&&!key.matches("[\\x21-\\x7e]{1,512}"))throw new IllegalArgumentException("Invalid credential format. Configure the provider again.");JSONObject body=new JSONObject().put("model",model);
         if(provider.equals("anthropic")){
             headers.put("x-api-key",key);headers.put("anthropic-version","2023-06-01");JSONArray chat=new JSONArray();
             for(int i=0;i<clean.length();i++)if(!clean.getJSONObject(i).getString("role").equals("system"))chat.put(clean.getJSONObject(i));

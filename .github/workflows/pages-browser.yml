@@ -12,6 +12,9 @@ on:
       - 'test/runtime-browser.py'
       - 'test/repair-browser.py'
       - 'test/android-workflow-browser.py'
+      - 'test/quality-workflows-browser.py'
+      - 'test/git-workflows-browser.py'
+      - 'test/git-transport-browser.py'
       - 'ide-runtime.cjs'
       - 'server.js'
       - 'test/pages-browser.py'
@@ -19,6 +22,7 @@ on:
       - 'test/pages.test.cjs'
       - '.github/workflows/pages-browser.yml'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -55,3 +59,10 @@ jobs:
 
       - name: Validate isolated JavaScript, offline Git, project search and resumable reviews
         run: python test/android-workflow-browser.py
+
+      - name: Validate branches, diffs and merge recovery
+        run: python test/git-workflows-browser.py
+      - name: Validate actual Git HTTP against local fixture remotes
+        run: python test/git-transport-browser.py
+      - name: Validate replacement, diagnostics, settings and functional AI test mechanism
+        run: python test/quality-workflows-browser.py

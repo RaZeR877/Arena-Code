@@ -1,6 +1,7 @@
 name: Android native workflow tests
 on:
   workflow_dispatch:
+  workflow_call:
   push:
     branches: [main, 'feat/finish-runtime-release']
     paths: ['android/**', 'public/**', 'scripts/**', 'capacitor.config.json', 'package*.json', '.github/workflows/android-device.yml']
@@ -42,7 +43,7 @@ jobs:
           target: google_apis
           arch: x86_64
           disable-animations: true
-          script: android/gradlew -p android :app:connectedDebugAndroidTest --no-daemon --max-workers=2 && python3 scripts/verify-android-results.py
+          script: android/gradlew -p android :app:connectedDebugAndroidTest --no-daemon --max-workers=2 && python3 scripts/verify-android-results.py --min-tests 3 --required-class dev.vynqode.ide.NativeWorkflowTest --required-class dev.vynqode.ide.nativebridge.DeviceStorageTest
       - uses: actions/cache/save@v4
         if: always() && steps.gradle-cache.outputs.cache-hit != 'true'
         with:

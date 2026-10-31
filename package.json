@@ -1,6 +1,6 @@
 {
   "name": "vynqode",
-  "version": "0.15.0-rc.1",
+  "version": "0.16.0-dev",
   "private": true,
   "scripts": {
     "start": "node server.js",
@@ -24,9 +24,11 @@
     "android:keygen": "node scripts/android-signing.cjs create",
     "android:release": "node scripts/android-signing.cjs release",
     "android:device-test": "npm run android:sync && cd android && ./gradlew :app:connectedDebugAndroidTest",
-    "test:browser:android-workflow": "npm run build:pages && python3 test/android-workflow-browser.py"
+    "test:browser:android-workflow": "npm run build:pages && python3 test/android-workflow-browser.py",
+    "android:verify": "python3 scripts/verify-android-release.py",
+    "test:browser:quality": "npm run build:pages && python3 test/git-workflows-browser.py && python3 test/git-transport-browser.py && python3 test/quality-workflows-browser.py"
   },
-  "description": "Vynqode IDE — polished developer workbench and localhost-only session API key setup",
+  "description": "Vynqode IDE \u2014 polished developer workbench and localhost-only session API key setup",
   "engines": {
     "node": ">=20"
   },
@@ -54,5 +56,10 @@
   },
   "optionalDependencies": {
     "node-pty": "1.1.0"
+  },
+  "overrides": {
+    "rimraf": {
+      "glob": "14.0.2"
+    }
   }
 }

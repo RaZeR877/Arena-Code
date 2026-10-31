@@ -24,3 +24,11 @@ For a genuinely new app with no existing signing identity, `npm run android:keyg
 The manual **Build signed Android release** workflow becomes available after merging the workflow onto the default branch. Configure the four repository secrets it names; the keystore is transported as `VYNQODE_KEYSTORE_BASE64`, decoded only into the temporary runner directory, and deleted after the job. Secret values are never generated or committed by that workflow. No store upload or publication is performed.
 
 Debug and release builds have different signing keys. Export projects before replacing a debug installation; Android may require uninstalling it, which removes its app data. A signed artifact alone does not establish device compatibility or store readiness.
+
+## Artifact and upgrade gates
+
+`android/release-certificate.sha256` pins the public certificate fingerprint extracted from the existing signed RC. It is not a private key. Do not change it during routine development.
+
+Run `python3 scripts/verify-android-release.py --apk path/to/app-release.apk --trusted-cert-file android/release-certificate.sha256 --previous-apk path/to/previous-release.apk --report verification.json`. It verifies signatures, package ID, increasing version code, certificate continuity, bundled runtime assets, missing development-server configuration and absence of credential-like archive files. `--expected-sha256` additionally checks a trusted download checksum. `--allow-debug` is for development inspection and never marks an artifact as a release. These are static artifact checks, not proof that app data survives an installed upgrade.
+
+The signed-build workflow now depends on the browser checks and accelerated native workflow for the same source. Its result checker requires at least three executed tests and both WebView and device-storage test classes. It uploads checksum sidecars and verification JSON alongside APK/AAB files. This workflow change has not been published or run in GitHub in the current draft. Physical-device and actual installed-upgrade tests remain required.
